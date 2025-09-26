@@ -1,0 +1,242 @@
+<% layout("/layouts/boilerplate.ejs") %>
+
+<style>
+    /* Dashboard-specific styles with proper namespacing */
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .dashboard-header {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 1rem;
+    }
+
+    .dashboard-header h2 {
+        color: #333;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .dashboard-tabs .nav-tabs {
+        border-bottom: 2px solid #dee2e6;
+        margin-bottom: 1.5rem;
+    }
+
+    .dashboard-tabs .nav-link {
+        color: #6c757d;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+    }
+
+    .dashboard-tabs .nav-link.active {
+        color: #0d6efd;
+        background: transparent;
+        border: none;
+        border-bottom: 3px solid #0d6efd;
+    }
+
+    .dashboard-tabs .nav-link:hover {
+        color: #0d6efd;
+        border: none;
+        border-bottom: 3px solid #0d6efd;
+    }
+
+    .dashboard-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .dashboard-card img {
+        height: 200px;
+        object-fit: cover;
+        width: 100%;
+    }
+
+    .dashboard-card .card-body {
+        padding: 1.5rem;
+    }
+
+    .dashboard-card .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+
+    .dashboard-card .card-text {
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+    }
+
+    .dashboard-card .btn {
+        background-color: #0d6efd;
+        border: none;
+        border-radius: 6px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+    }
+
+    .dashboard-list-group {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .dashboard-list-group .list-group-item {
+        border: none;
+        border-bottom: 1px solid #e9ecef;
+        padding: 1.25rem 1.5rem;
+    }
+
+    .dashboard-list-group .list-group-item:last-child {
+        border-bottom: none;
+    }
+
+    .dashboard-list-group strong {
+        color: #0d6efd;
+    }
+
+    .dashboard-list-group a {
+        color: #333;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .dashboard-list-group a:hover {
+        color: #0d6efd;
+        text-decoration: underline;
+    }
+
+    .dashboard-empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: #6c757d;
+    }
+
+    .dashboard-empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: #dee2e6;
+    }
+
+    .dashboard-empty-state h4 {
+        margin-bottom: 0.5rem;
+        color: #6c757d;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .dashboard-container {
+            padding: 1rem 0.5rem;
+        }
+        
+        .dashboard-tabs .nav-link {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .dashboard-card .card-body {
+            padding: 1rem;
+        }
+        
+        .dashboard-list-group .list-group-item {
+            padding: 1rem;
+        }
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h2>Welcome <%= currUser.username %></h2>
+    </div>
+    
+    <div class="dashboard-tabs">
+        <ul class="nav nav-tabs mb-3" id="dashboardTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="your-bookings-tab" data-bs-toggle="tab" data-bs-target="#your-bookings"
+                    type="button" role="tab" aria-controls="your-bookings" aria-selected="true">
+                    Your Bookings
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="hosted-bookings-tab" data-bs-toggle="tab" data-bs-target="#hosted-bookings"
+                    type="button" role="tab">
+                    Bookings on Your Listings
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="dashboardTabsContent">
+            <!-- Tab 1: Your Bookings -->
+            <div class="tab-pane fade show active" id="your-bookings" role="tabpanel">
+                <% if(myBookings.length==0) { %>
+                    <div class="dashboard-empty-state">
+                        <i class="fas fa-calendar-times"></i>
+                        <h4>No bookings yet</h4>
+                        <p>You haven't booked any listings yet.</p>
+                    </div>
+                <% } else { %>
+                    <div class="row">
+                        <% myBookings.forEach(b=> { %>
+                            <div class="col-md-4 mb-4">
+                                <div class="dashboard-card card">
+                                    <img src="<%= b.listing.image.url %>" class="card-img-top" alt="<%= b.listing.title %>" />
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <%= b.listing.title %>
+                                        </h5>
+                                        <p class="card-text">From: <%= b.startDate.toLocaleString() %></p>
+                                        <p class="card-text">To: <%= b.endDate.toLocaleString() %></p>
+                                        <a href="/listings/<%= b.listing._id %>" class="btn btn-primary">View Listing</a>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } %>
+            </div>
+
+            <!-- Tab 2: Bookings on Your Listings -->
+            <div class="tab-pane fade" id="hosted-bookings" role="tabpanel">
+                <% if(bookingsOnMyListings.length==0) { %>
+                    <div class="dashboard-empty-state">
+                        <i class="fas fa-home"></i>
+                        <h4>No bookings yet</h4>
+                        <p>There are no bookings on your listings yet.</p>
+                    </div>
+                <% } else { %>
+                    <ul class="dashboard-list-group list-group">
+                        <% bookingsOnMyListings.forEach(b=> { %>
+                            <li class="list-group-item">
+                                <% if(b.user && b.listing) { %>
+                                    <strong>@<%= b.user.username %></strong> booked
+                                    <a href="/listings/<%= b.listing._id %>">
+                                        <%= b.listing.title %>
+                                    </a> from
+                                    <%= new Date(b.startDate).toDateString() %> to <%= new Date(b.endDate).toDateString() %>
+                                <% } else { %>
+                                    Booking data incomplete.
+                                <% } %>
+                            </li>
+                        <% }) %>    
+                    </ul>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>

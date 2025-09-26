@@ -1,0 +1,400 @@
+<% layout("/layouts/boilerplate.ejs") %>
+
+<style>
+    /* Consistent color scheme with other pages */
+    :root {
+        --primary-color: #ff385c;
+        --primary-light: rgba(255, 56, 92, 0.1);
+        --secondary-color: #00a699;
+        --accent-color: #ff5a5f;
+        --dark-text: #222222;
+        --medium-text: #717171;
+        --light-bg: #f7f7f7;
+        --card-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        --hover-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Search results page namespace */
+    .search-results-page {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background-color: var(--light-bg);
+        min-height: 100vh;
+    }
+
+    .search-results-page .search-header {
+        background: white;
+        padding: 2rem 0;
+        border-bottom: 1px solid #e9ecef;
+        margin-bottom: 2rem;
+    }
+
+    .search-results-page .search-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .search-results-page .search-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--dark-text);
+        margin-bottom: 0.5rem;
+        display: block;
+        width: 100%;
+    }
+
+    .search-results-page .search-subtitle {
+        color: var(--medium-text);
+        font-size: 1.1rem;
+        display: block !important;
+        width: 100%;
+        margin-top: 0;
+        margin-bottom: 0;
+        clear: both;
+    }
+
+    .search-results-page .search-content {
+        display: flex;
+        gap: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem 2rem;
+    }
+
+    .search-results-page .results-section {
+        flex: 1;
+        min-width: 0; /* Prevent flex item overflow */
+    }
+
+    .search-results-page .map-section {
+        width: 40%;
+        min-width: 400px;
+        position: sticky;
+        top: 2rem;
+        height: fit-content;
+    }
+
+    .search-results-page #map {
+        width: 100%;
+        height: 600px;
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        border: 1px solid #e0e0e0;
+    }
+
+    .search-results-page .results-count {
+        color: var(--medium-text);
+        margin-bottom: 1.5rem;
+        font-size: 1rem;
+    }
+
+    .search-results-page .result-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+        overflow: hidden;
+    }
+
+    .search-results-page .result-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--hover-shadow);
+        border-color: var(--primary-light);
+    }
+
+    .search-results-page .result-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        padding: 1.5rem;
+    }
+
+    .search-results-page .result-content {
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-start;
+    }
+
+    .search-results-page .result-image {
+        width: 200px;
+        height: 150px;
+        border-radius: 12px;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .search-results-page .result-details {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .search-results-page .result-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--dark-text);
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+
+    .search-results-page .result-location {
+        color: var(--primary-color);
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .search-results-page .result-location::before {
+        content: "📍";
+        font-size: 0.9rem;
+    }
+
+    .search-results-page .result-description {
+        color: var(--medium-text);
+        line-height: 1.5;
+        margin-bottom: 1rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .search-results-page .result-price {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .search-results-page .result-price-period {
+        font-size: 0.9rem;
+        color: var(--medium-text);
+        font-weight: normal;
+    }
+
+    .search-results-page .no-results {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+    }
+
+    .search-results-page .no-results-icon {
+        font-size: 4rem;
+        color: var(--medium-text);
+        margin-bottom: 1rem;
+    }
+
+    .search-results-page .no-results-title {
+        font-size: 1.5rem;
+        color: var(--dark-text);
+        margin-bottom: 0.5rem;
+    }
+
+    .search-results-page .no-results-text {
+        color: var(--medium-text);
+        margin-bottom: 2rem;
+    }
+
+    .search-results-page .search-suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    .search-results-page .suggestion-tag {
+        background: var(--primary-light);
+        color: var(--primary-color);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .search-results-page .suggestion-tag:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .search-results-page mark {
+        background-color: #fff3cd;
+        color: var(--dark-text);
+        padding: 0.1rem 0.2rem;
+        border-radius: 3px;
+        font-weight: 600;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+        .search-results-page .search-content {
+            flex-direction: column;
+        }
+
+        .search-results-page .map-section {
+            width: 100%;
+            min-width: auto;
+            position: static;
+            order: -1;
+        }
+
+        .search-results-page #map {
+            height: 400px;
+            margin-bottom: 2rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .search-results-page .search-container {
+            padding: 0 1rem;
+        }
+
+        .search-results-page .search-content {
+            padding: 0 1rem 2rem;
+        }
+
+        .search-results-page .search-title {
+            font-size: 1.75rem;
+        }
+
+        .search-results-page .result-content {
+            flex-direction: column;
+        }
+
+        .search-results-page .result-image {
+            width: 100%;
+            height: 200px;
+        }
+
+        .search-results-page .result-card {
+            margin-bottom: 1rem;
+        }
+
+        .search-results-page .result-link {
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .search-results-page .search-header {
+            padding: 1.5rem 0;
+        }
+
+        .search-results-page .search-title {
+            font-size: 1.5rem;
+        }
+
+        .search-results-page #map {
+            height: 300px;
+        }
+
+        .search-results-page .no-results {
+            padding: 2rem 1rem;
+        }
+    }
+</style>
+
+<div class="search-results-page">
+    <div class="search-header">
+        <div class="search-container">
+            <h1 class="search-title">Search Results</h1>
+            <p class="search-subtitle">Showing results for "<%= query %>"</p>
+        </div>
+    </div>
+
+    <div class="search-content">
+        <div class="results-section">
+            <% if (results.length===0) { %>
+                <div class="no-results">
+                    <div class="no-results-icon">🔍</div>
+                    <h2 class="no-results-title">No listings found</h2>
+                    <p class="no-results-text">We couldn't find any properties matching your search criteria.</p>
+                    <div class="search-suggestions">
+                        <a href="/listings" class="suggestion-tag">Browse All Listings</a>
+                        <a href="/listings?category=Trending" class="suggestion-tag">Trending Destinations</a>
+                        <a href="/listings?category=Mountains" class="suggestion-tag">Mountain Getaways</a>
+                    </div>
+                </div>
+            <% } else { %>
+                <div class="results-count"><%= results.length %> property<%= results.length !== 1 ? 's' : '' %> found</div>
+                <div id="results"></div>
+            <% } %>
+        </div>
+
+        <% if (results.length > 0) { %>
+            <div class="map-section">
+                <div id="map"></div>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<script>
+    let mapToken = "<%= process.env.MAP_TOKEN %>";
+    const coord = JSON.parse('<%-JSON.stringify(coord.coordinates)%>');
+    const results = <%- JSON.stringify(results) %>;
+
+    const resultsBox = document.getElementById("results");
+    const mapContainer = document.getElementById("map");
+
+    document.addEventListener("DOMContentLoaded", async function () {
+        if (results.length > 0) {
+            maptilersdk.config.apiKey = mapToken;
+            const map = new maptilersdk.Map({
+                container: "map",
+                style: "basic-v2",
+                center: coord,
+                zoom: 9,
+            });
+
+            resultsBox.innerHTML = "";
+            results.forEach((item) => {
+                const title = highlightField(item.highlights, "title", item.title);
+                const location = highlightField(item.highlights, "location", item.location);
+                const description = highlightField(item.highlights, "description", item.description);
+                const price = item.price ? `₹${item.price.toLocaleString()}` : "Price on request";
+
+                resultsBox.innerHTML += `
+                    <div class="result-card">
+                        <a href="/listings/${item._id}" class="result-link">
+                            <div class="result-content">
+                                <img src="${item.image.url}" alt="${item.title}" class="result-image">
+                                <div class="result-details">
+                                    <h3 class="result-title">${title}</h3>
+                                    <div class="result-location">${location || "Location not specified"}</div>
+                                    <p class="result-description">${description || "No description available"}</p>
+                                    <div class="result-price">${price} <span class="result-price-period">/ night</span></div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                `;
+
+                const marker = new maplibregl.Marker({ color: "#ff385c" })
+                    .setLngLat(item.geometry.coordinates)
+                    .setPopup(
+                        new maplibregl.Popup({ offset: 25 }).setHTML(
+                            `<h4>${item.title}</h4><p>${price}/night</p>`
+                        )
+                    )
+                    .addTo(map);
+            });
+        }
+    });
+
+    function highlightField(highlights, field, fallback) {
+        const match = highlights.find((h) => h.path === field);
+        if (!match) return fallback;
+        return match.texts
+            .map((t) => (t.type === "hit" ? `<mark>${t.value}</mark>` : t.value))
+            .join("");
+    }
+</script>

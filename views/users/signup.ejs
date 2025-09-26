@@ -1,26 +1,396 @@
 <% layout("/layouts/boilerplate.ejs") %>
+<style>
+  :root {
+    --primary-color: #ff385c;
+    --primary-light: rgba(255, 56, 92, 0.1);
+    --secondary-color: #00a699;
+    --accent-color: #ff5a5f;
+    --dark-text: #222222;
+    --medium-text: #717171;
+    --light-bg: #f7f7f7;
+    --card-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    --hover-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+  }
 
-<div class="row mt-3">
-    <h1 class="col-6 offset-3">SignUp on Wanderlust</h1>
-    <div class="col-6 offset-3">
-        <form action="/signup" method="POST" class="needs-validation" novalidate>
-            <div class="mb-3">
-                <label for="username" class="form-label">Username</label>
-                <input name="username" type="text" class="form-control" id="username" required>
-                <div class="valid-feedback">Looks good!</div>
-            </div>
-            
-            <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
-                <input name="email" type="email" class="form-control" id="email" required>                
-            </div>
+  .signup-container {
+    display: flex;
+    height: 100vh; /* Full height */
+    overflow: hidden;
+    background: white;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
 
-            <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input name="password" type="password" class="form-control" id="password" required>                
-            </div>
+  /* Left Section - Signup Form */
+  .signup-content {
+    flex: 1;
+    display: flex;
+    align-items: stretch; /* Match left side height */
+    justify-content: center;
+    background: var(--light-bg);
+    padding: 0; /* Remove padding so card fills */
+  }
 
-            <button class="btn btn-success">SignUp</button>
-        </form>
+  .signup-card {
+    background: white;
+    padding: 3.5rem;
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+    width: 100%;
+    max-width: 100%; /* Fill right half */
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
+    opacity: 0;
+    animation: fadeInUp 0.8s ease 0.3s forwards;
+  }
+
+  .signup-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .signup-logo {
+    color: var(--primary-color);
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .signup-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin-bottom: 0.5rem;
+  }
+
+  .signup-subtitle {
+    color: var(--medium-text);
+    font-size: 1rem;
+  }
+
+  .signup-form {
+    margin-bottom: 2rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-label {
+    display: block;
+    font-weight: 600;
+    color: var(--dark-text);
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 1rem;
+    background: white;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(255, 56, 92, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .form-input:hover {
+    border-color: #c0c0c0;
+  }
+
+  .signup-btn {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .signup-btn:hover {
+    background: #e61e4d;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 56, 92, 0.3);
+  }
+
+  .signup-btn:active {
+    transform: translateY(0);
+  }
+
+  .signup-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  .signup-btn:hover::before {
+    left: 100%;
+  }
+
+  .signup-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #f0f0f0;
+    color: var(--medium-text);
+  }
+
+  .login-link {
+    color: var(--primary-color);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    margin-left: 0.25rem;
+  }
+
+  .login-link:hover {
+    text-decoration: underline;
+  }
+
+  /* Right Section - Visual */
+  .signup-visual {
+    flex: 1;
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #008489 100%);
+    position: relative;
+    display: flex;
+    overflow: hidden;
+  }
+
+  .signup-visual::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2080&q=80') center/cover;
+    opacity: 0.15;
+  }
+
+  .signup-visual-content {
+    position: relative;
+    z-index: 2;
+    padding: 4rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: white;
+  }
+
+  .signup-visual-title {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    line-height: 1.1;
+  }
+
+  .signup-visual-subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    line-height: 1.6;
+    max-width: 400px;
+  }
+
+  .signup-features {
+    margin-top: 3rem;
+  }
+
+  .signup-feature-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: slideInLeft 0.6s ease forwards;
+  }
+
+  .signup-feature-item:nth-child(1) { animation-delay: 0.2s; }
+  .signup-feature-item:nth-child(2) { animation-delay: 0.4s; }
+  .signup-feature-item:nth-child(3) { animation-delay: 0.6s; }
+
+  .signup-feature-icon {
+    background: rgba(255, 255, 255, 0.2);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.2rem;
+  }
+
+  .signup-feature-text {
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  /* Animations */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Validation */
+  .needs-validation .form-input:valid { border-color: #28a745; }
+  .needs-validation .form-input:invalid:focus { border-color: #dc3545; }
+  .invalid-feedback { display: none; font-size: 0.875rem; color: #dc3545; }
+  .was-validated .form-input:invalid ~ .invalid-feedback { display: block; }
+  .valid-feedback { display: none; font-size: 0.875rem; color: #28a745; }
+  .was-validated .form-input:valid ~ .valid-feedback { display: block; }
+
+  .error-message, .success-message {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+  }
+  .error-message {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border-left: 4px solid #dc3545;
+  }
+  .success-message {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border-left: 4px solid #28a745;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .signup-container { flex-direction: column-reverse; height: auto; }
+    .signup-visual { flex: 0 0 300px; }
+    .signup-card { padding: 2.5rem; margin: -50px 1rem 2rem; max-width: none; }
+  }
+  @media (max-width: 480px) {
+    .signup-card { padding: 2rem; margin: -30px 1rem 2rem; }
+    .signup-visual-title { font-size: 1.75rem; }
+    .signup-title { font-size: 1.5rem; }
+  }
+</style>
+
+<div class="signup-container">
+  <!-- Left Section -->
+  <div class="signup-content">
+    <div class="signup-card">
+      <div class="signup-header">
+        <div class="signup-logo"><i class="fa-solid fa-compass"></i></div>
+        <h1 class="signup-title">Join WanderLust</h1>
+        <p class="signup-subtitle">Create your account and start exploring</p>
+      </div>
+
+      <% if (typeof messages !== 'undefined' && messages.error) { %>
+        <div class="error-message"><i class="fas fa-exclamation-circle me-2"></i><%= messages.error %></div>
+      <% } %>
+      <% if (typeof messages !== 'undefined' && messages.success) { %>
+        <div class="success-message"><i class="fas fa-check-circle me-2"></i><%= messages.success %></div>
+      <% } %>
+
+      <form action="/signup" method="POST" class="signup-form needs-validation" novalidate>
+        <div class="form-group">
+          <label for="username" class="form-label">Username</label>
+          <input name="username" type="text" class="form-input" id="username" placeholder="Choose a username" required>
+          <div class="valid-feedback">Looks good!</div>
+          <div class="invalid-feedback">Please choose a username.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="email" class="form-label">Email</label>
+          <input name="email" type="email" class="form-input" id="email" placeholder="Enter your email" required>
+          <div class="invalid-feedback">Please provide a valid email.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <input name="password" type="password" class="form-input" id="password" placeholder="Create a password" required>
+          <div class="invalid-feedback">Please create a password.</div>
+        </div>
+
+        <button type="submit" class="signup-btn"><i class="fas fa-user-plus me-2"></i> Create Account</button>
+
+        <div class="signup-footer">
+          Already have an account? <a href="/login" class="login-link">Sign in here</a>
+        </div>
+      </form>
     </div>
+  </div>
+
+  <!-- Right Section -->
+  <div class="signup-visual">
+    <div class="signup-visual-content">
+      <h1 class="signup-visual-title">Start Your Adventure</h1>
+      <p class="signup-visual-subtitle">Join thousands of travelers discovering unique stays around the world</p>
+
+      <div class="signup-features">
+        <div class="signup-feature-item">
+          <div class="signup-feature-icon"><i class="fas fa-star"></i></div>
+          <span class="signup-feature-text">Exclusive member benefits</span>
+        </div>
+        <div class="signup-feature-item">
+          <div class="signup-feature-icon"><i class="fas fa-bolt"></i></div>
+          <span class="signup-feature-text">Instant booking confirmation</span>
+        </div>
+        <div class="signup-feature-item">
+          <div class="signup-feature-icon"><i class="fas fa-shield-alt"></i></div>
+          <span class="signup-feature-text">Secure and trusted platform</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<script>
+  document.querySelectorAll('.form-input').forEach(input => {
+    input.addEventListener('focus', () => input.parentElement.classList.add('focused'));
+    input.addEventListener('blur', () => { if (!input.value) input.parentElement.classList.remove('focused'); });
+  });
+
+  document.querySelector('.signup-form').addEventListener('submit', function() {
+    const btn = this.querySelector('.signup-btn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Creating Account...';
+    btn.disabled = true;
+  });
+
+  (function() {
+    'use strict';
+    window.addEventListener('load', function() {
+      Array.from(document.getElementsByClassName('needs-validation')).forEach(form => {
+        form.addEventListener('submit', function(event) {
+          if (form.checkValidity() === false) { event.preventDefault(); event.stopPropagation(); }
+          form.classList.add('was-validated');
+        }, false);
+      });
+    }, false);
+  })();
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const usernameField = document.getElementById('username');
+    if (usernameField) setTimeout(() => usernameField.focus(), 500);
+  });
+</script>

@@ -20,6 +20,8 @@ const User = require("./models/user.js");
 const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
+const bookingRouter = require("./routes/booking.js");
+const { initDB } = require("./db.js");
 
 const dbUrl = process.env.ATLASDB_URL;
 
@@ -31,6 +33,7 @@ main()
         console.log(err);
     });
 
+    initDB().then(() => console.log("✅ DB ready"));
 async function main() {
     await mongoose.connect(dbUrl);
 };
@@ -100,6 +103,7 @@ app.use((req, res, next) => {
 app.use("/listings", listingRouter);
 app.use("/listings/:id/reviews", reviewRouter);
 app.use("/", userRouter);
+app.use("/bookings", bookingRouter);
 
 app.use("*", (req, res, next) => {
     next(new ExpressError(404, "Page not found!"));

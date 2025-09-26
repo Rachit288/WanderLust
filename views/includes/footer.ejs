@@ -1,14 +1,338 @@
-<footer>
+<style>
+    /* Consistent color scheme with other pages */
+    :root {
+        --primary-color: #ff385c;
+        --primary-light: rgba(255, 56, 92, 0.1);
+        --secondary-color: #00a699;
+        --accent-color: #ff5a5f;
+        --dark-text: #222222;
+        --medium-text: #717171;
+        --light-bg: #f7f7f7;
+        --card-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        --hover-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Footer-specific namespace to prevent conflicts */
+    .main-footer {
+        background-color: var(--light-bg);
+        border-top: 1px solid #e9ecef;
+        padding: 2rem 0 1.5rem;
+        margin-top: 3rem;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        position: relative;
+        z-index: 10;
+        width: 100%;
+        overflow-x: hidden; /* Prevent horizontal scrolling */
+        box-sizing: border-box;
+    }
+
+    .main-footer .footer-content {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto 2rem;
+        padding: 0 2rem;
+        box-sizing: border-box;
+        width: 100%;
+    }
+
+    .main-footer .footer-section h3 {
+        color: var(--dark-text);
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .main-footer .footer-section ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .main-footer .footer-section ul li {
+        margin-bottom: 0.5rem;
+    }
+
+    .main-footer .footer-section ul li a {
+        color: var(--medium-text);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        display: inline-block;
+    }
+
+    .main-footer .footer-section ul li a:hover {
+        color: var(--primary-color);
+        transform: translateX(5px);
+    }
+
+    /* Footer info section - Fixed layout */
+    .main-footer .f-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 2rem 0;
+        border-top: 1px solid #e9ecef;
+        box-sizing: border-box;
+        width: 100%;
+    }
+
+    /* Clean Social Media Icons */
+    .main-footer .f-info-socials {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .main-footer .f-info-socials a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        border-radius: 4px;
+    }
+
+    .main-footer .f-info-socials a:hover {
+        transform: translateY(-2px);
+    }
+
+    .main-footer .f-info-socials i {
+        font-size: 1.6rem;
+        color: var(--medium-text);
+        transition: all 0.3s ease;
+    }
+
+    .main-footer .f-info-socials a:hover i {
+        transform: scale(1.1);
+    }
+
+    /* Platform-specific colors on hover */
+    .main-footer .f-info-socials a:hover .fa-square-facebook {
+        color: #1877f2 !important;
+    }
+
+    .main-footer .f-info-socials a:hover .fa-square-instagram {
+        color: #e4405f !important;
+    }
+
+    .main-footer .f-info-socials a:hover .fa-linkedin {
+        color: #0a66c2 !important;
+    }
+
+    .main-footer .f-info-brand {
+        font-size: 0.9rem;
+        color: var(--medium-text);
+        font-weight: 500;
+        text-align: center;
+        line-height: 1.5;
+        width: 100%;
+        max-width: 100%;
+        word-wrap: break-word;
+        padding: 0 1rem;
+        box-sizing: border-box;
+    }
+
+    .main-footer .f-info-links {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 100%;
+        padding: 0 1rem;
+        box-sizing: border-box;
+    }
+
+    .main-footer .f-info-links a {
+        color: var(--dark-text);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        position: relative;
+        padding: 0.25rem 0;
+        white-space: nowrap;
+    }
+
+    .main-footer .f-info-links a:hover {
+        color: var(--primary-color);
+    }
+
+    .main-footer .f-info-links a:not(:last-child)::after {
+        content: "•";
+        position: absolute;
+        right: -0.9rem;
+        color: #adb5bd;
+        font-weight: normal;
+    }
+
+    /* Responsive Design - Fixed for mobile */
+    @media (max-width: 768px) {
+        .main-footer {
+            padding: 1.5rem 0 1rem;
+            margin-top: 2rem;
+        }
+
+        .main-footer .footer-content {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            padding: 0 1rem;
+        }
+
+        .main-footer .f-info {
+            gap: 1.25rem;
+            padding: 1.5rem 1rem 0;
+        }
+
+        .main-footer .f-info-socials {
+            gap: 1.25rem;
+        }
+
+        .main-footer .f-info-socials i {
+            font-size: 1.5rem;
+        }
+        
+        .main-footer .f-info-links {
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .main-footer .f-info-links a:not(:last-child)::after {
+            content: none;
+        }
+
+        .main-footer .f-info-links a {
+            white-space: normal;
+            text-align: center;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .main-footer {
+            padding: 1rem 0 0.5rem;
+        }
+
+        .main-footer .f-info {
+            gap: 1rem;
+            padding: 1rem 0.5rem 0;
+        }
+
+        .main-footer .f-info-brand {
+            font-size: 0.85rem;
+            padding: 0 0.5rem;
+        }
+
+        .main-footer .f-info-links a {
+            font-size: 0.8rem;
+        }
+        
+        .main-footer .footer-section h3 {
+            font-size: 1rem;
+        }
+
+        .main-footer .footer-content {
+            padding: 0 0.5rem;
+        }
+    }
+
+    /* Ensure no horizontal overflow */
+    body {
+        overflow-x: hidden;
+        width: 100%;
+        position: relative;
+    }
+
+    html {
+        overflow-x: hidden;
+    }
+</style>
+
+<footer class="main-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <h3>Explore</h3>
+            <ul>
+                <li><a href="/listings">All Listings</a></li>
+                <li><a href="/listings?category=Trending">Trending Destinations</a></li>
+                <li><a href="/listings?category=Mountains">Mountain Getaways</a></li>
+                <li><a href="/listings?category=Beach">Beachfront Properties</a></li>
+            </ul>
+        </div>
+        
+        <div class="footer-section">
+            <h3>Hosting</h3>
+            <ul>
+                <li><a href="/listings/new">Become a Host</a></li>
+                <li><a href="/hosting/resources">Hosting Resources</a></li>
+                <li><a href="/hosting/standards">Hosting Standards</a></li>
+                <li><a href="/community">Community Forum</a></li>
+            </ul>
+        </div>
+        
+        <div class="footer-section">
+            <h3>Support</h3>
+            <ul>
+                <li><a href="/help">Help Center</a></li>
+                <li><a href="/safety">Safety Information</a></li>
+                <li><a href="/cancellation">Cancellation Options</a></li>
+                <li><a href="/contact">Contact Support</a></li>
+            </ul>
+        </div>
+    </div>
+
     <div class="f-info">
         <div class="f-info-socials">
-            <i class="fa-brands fa-square-facebook"></i>
-            <i class="fa-brands fa-square-instagram"></i>
-            <i class="fa-brands fa-linkedin"></i>
+            <a href="https://facebook.com" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-square-facebook"></i>
+            </a>
+            <a href="https://instagram.com" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-square-instagram"></i>
+            </a>
+            <a href="https://linkedin.com" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-linkedin"></i>
+            </a>
         </div>
-        <div class="f-info-brand">&copy; WanderLust Private Limited</div>
+        
         <div class="f-info-links">
-            <a href="/privacy">Privacy</a>
-            <a href="/terms">Terms</a>
+            <a href="/privacy">Privacy Policy</a>
+            <a href="/terms">Terms of Service</a>
+            <a href="/sitemap">Sitemap</a>
+            <a href="/contact">Contact Us</a>
+        </div>
+        
+        <div class="f-info-brand">
+            &copy; <span id="current-year"></span> WanderLust Private Limited. All rights reserved.
         </div>
     </div>    
 </footer>
+
+<script>
+    // Set current year automatically
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+
+    // Add smooth hover effects for social links
+    document.addEventListener('DOMContentLoaded', function() {
+        const socialLinks = document.querySelectorAll('.main-footer .f-info-socials a');
+        
+        socialLinks.forEach(link => {
+            link.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+            });
+            
+            link.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+
+        // Ensure no horizontal scrolling
+        document.body.style.overflowX = 'hidden';
+        document.documentElement.style.overflowX = 'hidden';
+    });
+</script>

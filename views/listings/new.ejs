@@ -1,49 +1,433 @@
 <% layout("/layouts/boilerplate.ejs") %>
+    <% const allCategories=["Trending", "Rooms" , "Iconic-Cities" , "Mountains" , "Castles" , "Amazing-Pools"
+        , "Camping" , "Farms" , "Arctic" , "Domes" , "Boats" ]; %>
 
-    <div class="row mt-3">
-        <div class="col-8 offset-2">
-            <h3>Create a new listing</h3>
-            <form method="POST" action="/listings" class="needs-validation" novalidate enctype="multipart/form-data">
-                <div class="mb-3">
-                    <label for="title" class="form-label">Title</label>
-                    <input name="listing[title]" placeholder="Add a catchy title" type="text" class="form-control" required>
-                    <div class="valid-feedback">Title looks good!</div>
+        <style>
+            /* Consistent color scheme with other pages */
+            :root {
+                --primary-color: #ff385c;
+                --primary-light: rgba(255, 56, 92, 0.1);
+                --secondary-color: #00a699;
+                --accent-color: #ff5a5f;
+                --dark-text: #222222;
+                --medium-text: #717171;
+                --light-bg: #f7f7f7;
+                --card-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+                --hover-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+                --error-color: #dc3545;
+                --success-color: #28a745;
+            }
+
+            /* Ensure navbar styles don't interfere with our form */
+            .new-listing-page .navbar {
+                /* Reset any styles that might conflict */
+                position: relative !important;
+                z-index: 1000 !important;
+            }
+
+            .new-listing-page .new-container {
+                max-width: 1000px;
+                margin: 0 auto;
+                padding: 2rem 1rem;
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                position: relative;
+                z-index: 1;
+            }
+
+            .new-listing-page .new-header {
+                text-align: center;
+                margin-bottom: 2.5rem;
+            }
+
+            .new-listing-page .new-title {
+                font-size: 2.5rem;
+                font-weight: 700;
+                color: var(--dark-text);
+                margin-bottom: 0.5rem;
+            }
+
+            .new-listing-page .new-subtitle {
+                color: var(--medium-text);
+                font-size: 1.1rem;
+                max-width: 600px;
+                margin: 0 auto;
+            }
+
+            .new-listing-page .new-card {
+                background: white;
+                border-radius: 16px;
+                box-shadow: var(--card-shadow);
+                padding: 2.5rem;
+                margin-bottom: 2rem;
+            }
+
+            .new-listing-page .form-label {
+                font-weight: 600;
+                color: var(--dark-text);
+                margin-bottom: 0.75rem;
+                display: block;
+                font-size: 1rem;
+            }
+
+            .new-listing-page .form-control {
+                width: 100%;
+                padding: 1rem 1.25rem;
+                border: 2px solid #e0e0e0;
+                border-radius: 10px;
+                font-size: 1rem;
+                background: white;
+                transition: all 0.3s ease;
+                box-sizing: border-box;
+                margin-bottom: 1.5rem;
+            }
+
+            .new-listing-page .form-control:focus {
+                outline: none;
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 3px rgba(255, 56, 92, 0.1);
+                transform: translateY(-1px);
+            }
+
+            .new-listing-page textarea.form-control {
+                min-height: 120px;
+                resize: vertical;
+            }
+
+            .new-listing-page .form-row {
+                display: flex;
+                flex-wrap: wrap;
+                margin: 0 -0.75rem;
+            }
+
+            .new-listing-page .form-col {
+                flex: 1;
+                padding: 0 0.75rem;
+                min-width: 250px;
+            }
+
+            .new-listing-page .file-input-wrapper {
+                position: relative;
+                margin-bottom: 1.5rem;
+            }
+
+            .new-listing-page .file-input-label {
+                display: block;
+                padding: 1rem 1.25rem;
+                border: 2px dashed #e0e0e0;
+                border-radius: 10px;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                color: var(--medium-text);
+                background: #fafafa;
+            }
+
+            .new-listing-page .file-input-label:hover {
+                border-color: var(--primary-color);
+                background: var(--primary-light);
+                color: var(--primary-color);
+            }
+
+            .new-listing-page .file-input {
+                position: absolute;
+                left: -9999px;
+            }
+
+            .new-listing-page .add-btn {
+                width: 100%;
+                padding: 1rem 1.5rem;
+                background: var(--primary-color);
+                color: white;
+                border: none;
+                border-radius: 10px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                margin-top: 1rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .new-listing-page .add-btn:hover {
+                background: #e61e4d;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(255, 56, 92, 0.3);
+            }
+
+            .new-listing-page .btn-icon {
+                margin-right: 0.5rem;
+            }
+
+            /* Custom Select2 Styling - EXACTLY like edit.ejs */
+            .new-listing-page .select2-container {
+                width: 100% !important;
+                margin-bottom: 1.5rem;
+            }
+
+            .new-listing-page .select2-container .select2-selection--multiple {
+                min-height: 56px;
+                padding: 0.5rem 1.25rem;
+                border: 2px solid #e0e0e0;
+                border-radius: 10px;
+                font-size: 1rem;
+                background: white;
+                transition: all 0.3s ease;
+            }
+
+            .new-listing-page .select2-container--default .select2-selection--multiple:focus {
+                outline: none;
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 3px rgba(255, 56, 92, 0.1);
+            }
+
+            .new-listing-page .select2-container--default .select2-selection--multiple .select2-selection__choice {
+                background-color: var(--primary-color);
+                border: none;
+                border-radius: 6px;
+                color: white;
+                padding: 0.25rem 0.5rem;
+                font-size: 0.875rem;
+                margin-top: 0.5rem;
+            }
+
+            .new-listing-page .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+                color: white;
+                margin-right: 0.25rem;
+            }
+
+            .new-listing-page .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+                color: rgba(255, 255, 255, 0.8);
+            }
+
+            /* FIXED: Added hover effect for dropdown options */
+            .new-listing-page .select2-container--default .select2-results__option--highlighted[aria-selected] {
+                background-color: var(--primary-color) !important;
+                color: white !important;
+            }
+
+            /* NEW: Hover effect for all options */
+            .new-listing-page .select2-container--default .select2-results__option:hover {
+                background-color: var(--primary-color) !important;                
+            }
+
+            .new-listing-page .select2-dropdown {
+                border: 2px solid #e0e0e0;
+                border-radius: 10px;
+                box-shadow: var(--card-shadow);
+                overflow: hidden;
+                max-width: 100% !important;
+                /* Prevent overflow */
+            }
+
+            /* Validation styles - Fixed */
+            .new-listing-page .was-validated .form-control:valid {
+                border-color: var(--success-color);
+            }
+
+            .new-listing-page .was-validated .form-control:invalid {
+                border-color: var(--error-color);
+            }
+
+            .new-listing-page .was-validated .select2-selection--multiple:invalid {
+                border-color: var(--error-color);
+            }
+
+            .new-listing-page .valid-feedback,
+            .new-listing-page .invalid-feedback {
+                display: none;
+                margin-top: 0.25rem;
+                font-size: 0.875rem;
+            }
+
+            .new-listing-page .was-validated .form-control:valid+.valid-feedback {
+                display: block;
+                color: var(--success-color);
+            }
+
+            .new-listing-page .was-validated .form-control:invalid+.invalid-feedback {
+                display: block;
+                color: var(--error-color);
+            }
+
+            /* Responsive design */
+            @media (max-width: 768px) {
+                .new-listing-page .new-container {
+                    padding: 1rem 0.5rem;
+                }
+
+                .new-listing-page .new-card {
+                    padding: 1.5rem;
+                }
+
+                .new-listing-page .new-title {
+                    font-size: 2rem;
+                }
+
+                .new-listing-page .form-row {
+                    flex-direction: column;
+                }
+
+                .new-listing-page .form-col {
+                    width: 100%;
+                    padding: 0;
+                }
+
+                .new-listing-page .select2-container .select2-selection--multiple {
+                    min-height: 50px;
+                    padding: 0.5rem 1rem;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .new-listing-page .new-title {
+                    font-size: 1.75rem;
+                }
+
+                .new-listing-page .new-card {
+                    padding: 1rem;
+                }
+
+                .new-listing-page .form-control {
+                    padding: 0.875rem 1rem;
+                }
+            }
+        </style>
+
+        <div class="new-listing-page">
+            <div class="new-container">
+                <div class="new-header">
+                    <h1 class="new-title">Create a New Listing</h1>
+                    <p class="new-subtitle">Share your unique space with travelers from around the world</p>
                 </div>
 
-                <div class="mb-3">
-                    <label for="description" class="form-label">Description</label>
-                    <textarea name="listing[description]" placeholder="enter description"
-                        class="form-control" required></textarea>
-                        <div class="invalid-feedback">Please enter a short description</div>
-                </div>
+                <div class="new-card">
+                    <form method="POST" action="/listings" class="needs-validation" novalidate
+                        enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="title" class="form-label">Title</label>
+                            <input name="listing[title]" placeholder="Add a catchy title that describes your property"
+                                type="text" class="form-control" id="title" required>
+                            <div class="valid-feedback">Title looks good!</div>
+                            <div class="invalid-feedback">Please provide a title for your listing.</div>
+                        </div>
 
-                <div class="mb-3">
-                    <label for="image" class="form-label">Upload Listing Image</label>
-                    <input name="listing[image]" type="file" class="form-control" required>
-                </div>
+                        <div class="form-group">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea name="listing[description]"
+                                placeholder="Describe what makes your property special and what guests can expect"
+                                class="form-control" id="description" required></textarea>
+                            <div class="valid-feedback">Description looks good!</div>
+                            <div class="invalid-feedback">Please enter a description for your listing.</div>
+                        </div>
 
-                <div class="row">
-                    <div class="mb-3 col-md-4">
-                        <label for="price" class="form-label">Price</label>
-                        <input name="listing[price]" placeholder="1200" class="form-control" required>
-                        <div class="invalid-feedback">Please enter a valid price</div>
-                    </div>
+                        <div class="file-input-wrapper">
+                            <label for="image" class="form-label">Upload Listing Image</label>
+                            <label for="image" class="file-input-label">
+                                <i class="fas fa-cloud-upload-alt btn-icon"></i>Choose a high-quality image that
+                                showcases your property
+                            </label>
+                            <input name="listing[image]" type="file" class="file-input" id="image" accept="image/*"
+                                required>
+                            <div class="invalid-feedback">Please upload an image for your listing.</div>
+                        </div>
 
-                    <div class="mb-3 col-md-8">
-                        <label for="country" class="form-label">Country</label>
-                        <input name="listing[country]" placeholder="India" type="text" class="form-control" required>
-                        <div class="invalid-feedback">Country name should be valid</div>
-                    </div>
-                </div>
+                        <div class="form-group">
+                            <label for="category" class="form-label">Select Categories</label>
+                            <select name="listing[category][]" multiple="multiple" class="js-example-basic-multiple"
+                                id="category" required>
+                                <% allCategories.forEach(cat=> { %>
+                                    <option value="<%= cat %>">
+                                        <%= cat %>
+                                    </option>
+                                    <% }); %>
+                            </select>
+                            <div class="invalid-feedback">Please select at least one category.</div>
+                        </div>
 
-                <div class="mb-3">
-                    <label for="location" class="form-label">Location</label>
-                    <input name="listing[location]" placeholder="Jaipur, Rajasthan" type="text" class="form-control" required>
-                    <div class="invalid-feedback">Location name should be valid</div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="price" class="form-label">Price ($/night)</label>
+                                    <input name="listing[price]" placeholder="1200" type="number" class="form-control"
+                                        id="price" min="1" required>
+                                    <div class="valid-feedback">Price looks good!</div>
+                                    <div class="invalid-feedback">Please enter a valid price.</div>
+                                </div>
+                            </div>
+
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="country" class="form-label">Country</label>
+                                    <input name="listing[country]" placeholder="India" type="text" class="form-control"
+                                        id="country" required>
+                                    <div class="valid-feedback">Country looks good!</div>
+                                    <div class="invalid-feedback">Please enter a valid country.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="location" class="form-label">Location</label>
+                            <input name="listing[location]" placeholder="Jaipur, Rajasthan" type="text"
+                                class="form-control" id="location" required>
+                            <div class="valid-feedback">Location looks good!</div>
+                            <div class="invalid-feedback">Please enter a valid location.</div>
+                        </div>
+
+                        <button type="submit" class="add-btn">
+                            <i class="fas fa-plus-circle btn-icon"></i>Create Listing
+                        </button>
+                    </form>
                 </div>
-                <br><br>
-                <button class="btn btn-dark add-btn mt-3">Add</button>
-                <br><br>
-            </form>
+            </div>
         </div>
-    </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Initialize Select2 with custom options
+                $(".js-example-basic-multiple").select2({
+                    placeholder: "Select one or more categories",
+                    width: "100%",
+                    dropdownAutoWidth: false, // Fixed width control
+                    dropdownCssClass: "shadow",
+                    dropdownParent: $('.new-listing-page'), // Ensure proper containment
+                    dropdownPosition: "below"
+                });
+
+                // Form validation
+                const form = document.querySelector('.needs-validation');
+
+                if (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+
+                        form.classList.add('was-validated');
+                    }, false);
+                }
+
+                // File input display
+                const fileInput = document.getElementById('image');
+                const fileInputLabel = document.querySelector('.file-input-label');
+
+                if (fileInput && fileInputLabel) {
+                    fileInput.addEventListener('change', function () {
+                        if (this.files && this.files[0]) {
+                            fileInputLabel.innerHTML = `<i class="fas fa-check btn-icon"></i>${this.files[0].name}`;
+                            fileInputLabel.style.borderColor = '#28a745';
+                            fileInputLabel.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+                        }
+                    });
+                }
+
+                // Auto-focus on first input field
+                const firstInput = document.querySelector('input[type="text"]');
+                if (firstInput) {
+                    firstInput.focus();
+                }
+            });
+        </script>

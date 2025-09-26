@@ -1,64 +1,589 @@
 <% layout("/layouts/boilerplate.ejs") %>
+    <style>
+        /* Consistent color scheme with other pages */
+        :root {
+            --primary-color: #ff385c;
+            --primary-light: rgba(255, 56, 92, 0.1);
+            --secondary-color: #00a699;
+            --accent-color: #ff5a5f;
+            --dark-text: #222222;
+            --medium-text: #717171;
+            --light-bg: #f7f7f7;
+            --card-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            --hover-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+            --error-color: #dc3545;
+            --success-color: #28a745;
+        }
 
-    <div class="row mt-3">
-        <div class="col-8 offset-2">
-            <h3>Edit your listing</h3>
-            <form method="POST" action="/listings/<%= listing._id %>?_method=PUT" class="needs-validation" novalidate enctype="multipart/form-data">
-                <div class="mb-3">
-                    <label for="title" class="form-label">Title</label>
-                    <input name="listing[title]" value="<%= listing.title %>" type="text" class=form-control required>
-                    <div class="valid-feedback">Title looks good!</div>
+        /* Namespace isolation to prevent navbar conflicts */
+        .edit-listing-page .navbar {
+            position: relative !important;
+            z-index: 1000 !important;
+        }
+
+        .edit-listing-page .edit-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .edit-listing-page .edit-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .edit-listing-page .edit-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #e61e4d 100%);
+            color: white;
+            padding: 2.5rem;
+            text-align: center;
+        }
+
+        .edit-listing-page .edit-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .edit-listing-page .edit-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .edit-listing-page .edit-form {
+            padding: 2.5rem;
+        }
+
+        .edit-listing-page .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .edit-listing-page .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--dark-text);
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+
+        .edit-listing-page .form-control {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: white;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .edit-listing-page .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(255, 56, 92, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .edit-listing-page .form-control:hover {
+            border-color: #c0c0c0;
+        }
+
+        .edit-listing-page textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .edit-listing-page .image-preview {
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .edit-listing-page .current-image {
+            max-width: 300px;
+            max-height: 200px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+        }
+
+        .edit-listing-page .image-label {
+            font-weight: 600;
+            color: var(--medium-text);
+            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .edit-listing-page .file-input {
+            padding: 0.75rem;
+            border: 2px dashed #e0e0e0;
+            border-radius: 12px;
+            background: #fafafa;
+            transition: all 0.3s ease;
+        }
+
+        .edit-listing-page .file-input:hover {
+            border-color: var(--primary-color);
+            background: var(--primary-light);
+        }
+
+        .edit-listing-page .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -0.75rem;
+        }
+
+        .edit-listing-page .col-md-4,
+        .edit-listing-page .col-md-8 {
+            padding: 0 0.75rem;
+            flex: 1;
+        }
+
+        .edit-listing-page .col-md-4 {
+            flex: 0 0 33.333%;
+            max-width: 33.333%;
+        }
+
+        .edit-listing-page .col-md-8 {
+            flex: 0 0 66.667%;
+            max-width: 66.667%;
+        }
+
+        .edit-listing-page .edit-btn {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .edit-listing-page .edit-btn:hover {
+            background: #e61e4d;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 56, 92, 0.3);
+        }
+
+        .edit-listing-page .edit-btn:active {
+            transform: translateY(0);
+        }
+
+        .edit-listing-page .edit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .edit-listing-page .edit-btn:hover::before {
+            left: 100%;
+        }
+
+        /* Custom Select2 Styling - Namespaced */
+        .edit-listing-page .select2-container {
+            width: 100% !important;
+            margin-bottom: 1.5rem;
+        }
+
+        .edit-listing-page .select2-container .select2-selection--multiple {
+            min-height: 56px;
+            padding: 0.5rem 1.25rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .edit-listing-page .select2-container--default .select2-selection--multiple:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(255, 56, 92, 0.1);
+        }
+
+        .edit-listing-page .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .edit-listing-page .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+            color: white;
+            margin-right: 0.25rem;
+        }
+
+        .edit-listing-page .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .edit-listing-page .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: var(--primary-color) !important;
+            color: white !important;
+        }
+
+        /* FIXED: Reduced dropdown width and added hover */
+        .edit-listing-page .select2-dropdown {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            max-width: 100% !important;
+            /* width: auto !important; */
+        }
+
+        /* NEW: Hover effect for all options */
+        .edit-listing-page .select2-container--default .select2-results__option:hover {
+            background-color: var(--primary-color) !important;            
+        }
+
+        /* Form Validation Styling - Namespaced */
+        .edit-listing-page .was-validated .form-control:valid {
+            border-color: var(--success-color);
+        }
+
+        .edit-listing-page .was-validated .form-control:invalid:focus {
+            border-color: var(--error-color);
+        }
+
+        .edit-listing-page .was-validated .select2-selection--multiple:invalid {
+            border-color: var(--error-color);
+        }
+
+        .edit-listing-page .invalid-feedback {
+            display: none;
+            width: 100%;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--error-color);
+        }
+
+        .edit-listing-page .was-validated .form-control:invalid ~ .invalid-feedback {
+            display: block;
+        }
+
+        .edit-listing-page .valid-feedback {
+            display: none;
+            width: 100%;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--success-color);
+        }
+
+        .edit-listing-page .was-validated .form-control:valid ~ .valid-feedback {
+            display: block;
+        }
+
+        /* Animation */
+        .edit-listing-page .edit-card {
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Success/Error Messages - Namespaced */
+        .edit-listing-page .alert-message {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border-left: 4px solid;
+            font-weight: 500;
+        }
+
+        .edit-listing-page .alert-success {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+            border-left-color: #28a745;
+        }
+
+        .edit-listing-page .alert-error {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border-left-color: #dc3545;
+        }
+
+        /* Responsive Design - Namespaced */
+        @media (max-width: 768px) {
+            .edit-listing-page .edit-container {
+                padding: 0 1rem;
+                margin: 1rem auto;
+            }
+
+            .edit-listing-page .edit-header {
+                padding: 2rem 1.5rem;
+            }
+
+            .edit-listing-page .edit-title {
+                font-size: 2rem;
+            }
+
+            .edit-listing-page .edit-form {
+                padding: 2rem 1.5rem;
+            }
+
+            .edit-listing-page .col-md-4,
+            .edit-listing-page .col-md-8 {
+                flex: 0 0 100%;
+                max-width: 100%;
+                margin-bottom: 1rem;
+            }
+
+            .edit-listing-page .row {
+                margin: 0;
+            }
+
+            .edit-listing-page .current-image {
+                max-width: 100%;
+            }
+
+            .edit-listing-page .select2-container .select2-selection--multiple {
+                min-height: 50px;
+                padding: 0.5rem 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .edit-listing-page .edit-header {
+                padding: 1.5rem 1rem;
+            }
+
+            .edit-listing-page .edit-title {
+                font-size: 1.75rem;
+            }
+
+            .edit-listing-page .edit-form {
+                padding: 1.5rem 1rem;
+            }
+
+            .edit-listing-page .form-control {
+                padding: 0.875rem 1rem;
+            }
+
+            .edit-listing-page .edit-btn {
+                padding: 0.875rem 1.25rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+
+    <div class="edit-listing-page">
+        <div class="edit-container">
+            <!-- Display flash messages if any -->
+            <% if (typeof messages !=='undefined' && messages.success) { %>
+                <div class="alert-message alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <%= messages.success %>
                 </div>
+                <% } %>
 
-                <div class="mb-3">
-                    <label for="description" class="form-label">Description</label>
-                    <textarea name="listing[description]" class="form-control"
-                        required><%= listing.description %></textarea>
-                    <div class="invalid-feedback">Please enter a short description</div>
-                </div>
-
-                <div class="mb-3">
-                    Original Listing Image <br>
-                    <img src="<%= originalImageUrl %>">    
-                </div>
-
-                <div class="mb-3">
-                    <label for="image" class="form-label">Upload New Image</label>
-                    <input name="listing[image]" type="file" class=form-control>
-                </div>
-
-                <div class="row">
-
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label for="price" class="form-label">Price</label>
-                            <input name="listing[price]" value="<%= listing.price %>" type="number" class=form-control
-                                required>
-                            <div class="invalid-feedback">Please enter a valid price</div>
+                    <% if (typeof messages !=='undefined' && messages.error) { %>
+                        <div class="alert-message alert-error">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            <%= messages.error %>
                         </div>
-                    </div>
+                        <% } %>
 
-                    <div class="col-md-8">
-                        <div class="mb-3">
-                            <label for="country" class="form-label">Country</label>
-                            <input name="listing[country]" value="<%= listing.country %>" type="text" class=form-control
-                                required>
-                            <div class="invalid-feedback">Country name should be valid</div>
-                        </div>
-                    </div>
+                            <div class="edit-card">
+                                <div class="edit-header">
+                                    <h1 class="edit-title">Edit Your Listing</h1>
+                                    <p class="edit-subtitle">Update your property details to attract more guests</p>
+                                </div>
 
-                </div>
+                                <form method="POST" action="/listings/<%= listing._id %>?_method=PUT"
+                                    class="edit-form needs-validation" novalidate enctype="multipart/form-data">
+                                    <div class="form-group">
+                                        <label for="title" class="form-label">Listing Title</label>
+                                        <input name="listing[title]" value="<%= listing.title %>" type="text"
+                                            class="form-control" id="title" required
+                                            placeholder="Enter a catchy title for your listing">
+                                        <div class="valid-feedback">Title looks great!</div>
+                                        <div class="invalid-feedback">Please enter a title for your listing</div>
+                                    </div>
 
-                <div class="mb-3">
-                    <label for="location" class="form-label">Location</label>
-                    <input name="listing[location]" value="<%= listing.location %>" type="text" class=form-control
-                        required>
-                    <div class="invalid-feedback">Location name should be valid</div>
-                </div>
+                                    <div class="form-group">
+                                        <label for="description" class="form-label">Description</label>
+                                        <textarea name="listing[description]" class="form-control" id="description" required
+                                            placeholder="Describe your property, amenities, and what makes it special"><%= listing.description %></textarea>
+                                        <div class="invalid-feedback">Please enter a description for your listing</div>
+                                    </div>
 
-                <button class="btn btn-dark edit-btn mt-3">Edit</button>
+                                    <div class="form-group">
+                                        <span class="image-label">Current Image</span>
+                                        <div class="image-preview">
+                                            <img src="<%= originalImageUrl %>" alt="Current listing image"
+                                                class="current-image">
+                                            <div class="image-label">This is your current listing image</div>
+                                        </div>
+                                    </div>
 
-            </form>
+                                    <div class="form-group">
+                                        <label for="image" class="form-label">Upload New Image</label>
+                                        <input name="listing[image]" type="file" class="form-control file-input" id="image"
+                                            accept="image/*">
+                                        <div class="form-text">Choose a new image to replace the current one (optional)
+                                        </div>
+                                    </div>
+
+                                    <!-- Category Selection -->
+                                    <div class="form-group">
+                                        <label for="category" class="form-label">Select Categories</label>
+                                        <select name="listing[category][]" multiple="multiple"
+                                            class="js-example-basic-multiple" id="category" required>
+                                            <% const allCategories=["Trending", "Rooms" , "Iconic-Cities" , "Mountains"
+                                                , "Castles" , "Amazing-Pools" , "Camping" , "Farms" , "Arctic" , "Domes"
+                                                , "Boats" ]; %>
+                                                <% allCategories.forEach(cat=> { %>
+                                                    <option value="<%= cat %>" <%=listing.category &&
+                                                        listing.category.includes(cat) ? 'selected' : '' %>>
+                                                        <%= cat %>
+                                                    </option>
+                                                    <% }); %>
+                                        </select>
+                                        <div class="invalid-feedback">Please select at least one category.</div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label for="price" class="form-label">Price per Night (₹)</label>
+                                                <input name="listing[price]" value="<%= listing.price %>" type="number"
+                                                    class="form-control" id="price" required min="1" placeholder="0">
+                                                <div class="invalid-feedback">Please enter a valid price</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-8">
+                                            <div class="form-group">
+                                                <label for="country" class="form-label">Country</label>
+                                                <input name="listing[country]" value="<%= listing.country %>" type="text"
+                                                    class="form-control" id="country" required
+                                                    placeholder="Enter country name">
+                                                <div class="invalid-feedback">Please enter a valid country name</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="location" class="form-label">Location</label>
+                                        <input name="listing[location]" value="<%= listing.location %>" type="text"
+                                            class="form-control" id="location" required
+                                            placeholder="Enter city, state, or specific location">
+                                        <div class="invalid-feedback">Please enter a valid location</div>
+                                    </div>
+
+                                    <button type="submit" class="edit-btn">
+                                        <i class="fas fa-save me-2"></i>Update Listing
+                                    </button>
+                                </form>
+                            </div>
         </div>
     </div>
-    
+
+    <script>
+        // Form validation
+        (function () {
+            'use strict';
+            window.addEventListener('load', function () {
+                var forms = document.getElementsByClassName('needs-validation');
+                var validation = Array.prototype.filter.call(forms, function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+
+        // Initialize Select2 with proper containment
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Select2 for category selection
+            $(".js-example-basic-multiple").select2({
+                placeholder: "Select one or more categories",
+                width: "100%",
+                dropdownAutoWidth: false,
+                dropdownCssClass: "shadow",
+                dropdownParent: $('.edit-listing-page'), // Proper containment
+                dropdownPosition: "below"
+            });
+
+            // Add loading state to submit button
+            document.querySelector('.edit-form').addEventListener('submit', function (e) {
+                const btn = this.querySelector('.edit-btn');
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Updating...';
+                btn.disabled = true;
+            });
+
+            // Image preview for new image upload
+            document.getElementById('image').addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        // Create preview image if it doesn't exist
+                        let preview = document.querySelector('.image-preview .current-image');
+                        if (!preview || !preview.classList.contains('new-preview')) {
+                            const oldPreview = document.querySelector('.image-preview .current-image');
+                            if (oldPreview) {
+                                oldPreview.style.display = 'none';
+                            }
+
+                            preview = document.createElement('img');
+                            preview.className = 'current-image new-preview';
+                            preview.alt = 'New listing image preview';
+                            document.querySelector('.image-preview').appendChild(preview);
+                        }
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+
+                        // Update label
+                        const label = document.querySelector('.image-preview .image-label');
+                        if (label) {
+                            label.textContent = 'This will be your new listing image';
+                            label.style.color = 'var(--primary-color)';
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Auto-focus on first field
+            const firstField = document.getElementById('title');
+            if (firstField) {
+                setTimeout(() => {
+                    firstField.focus();
+                }, 500);
+            }
+        });
+    </script>

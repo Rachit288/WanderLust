@@ -1,51 +1,436 @@
-<style>
-  .search-btn {
-    background-color: #fe424d;
-    color: #fff;
-    border-radius: 25px;
-    padding: 0 1rem 0 1rem;
-  }
-  .search-btn:hover {
-    background-color: #fe424d;
-    color: #fff;
-  }
-  .search-btn i {
-    display: inline;
-    margin-right: 0.5rem;
-  }
-  
-  .search-inp {
-    border-radius: 25px;
-    padding: 0.5rem 3rem 0.5rem 3rem;
-    font-size: 1rem;
-  }
+<!-- <style>
+    .search-btn {
+        background-color: #fe424d;
+        color: #fff;
+        border-radius: 25px;
+        padding: 0 1rem 0 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .search-btn:hover {
+        background-color: #e63742;
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .search-btn i {
+        display: inline;
+        margin-right: 0.5rem;
+    }
+
+    .search-inp {
+        border-radius: 25px;
+        padding: 0.5rem 3rem 0.5rem 3rem;
+        font-size: 1rem;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+
+    .search-inp:focus {
+        border-color: #fe424d;
+        box-shadow: 0 0 0 0.25rem rgba(254, 66, 77, 0.25);
+    }
+
+    #suggestions {
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        display: none;
+        position: absolute;
+        max-height: 200px;
+        overflow-y: auto;
+        width: calc(100% - 100px);
+        margin-top: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+    }
+
+    .suggestion-item {
+        padding: 10px 15px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .suggestion-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .dashboard-link {
+        background-color: #4a6fa5;
+        color: white !important;
+        border-radius: 25px;
+        padding: 8px 16px !important;
+        margin-right: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .dashboard-link:hover {
+        background-color: #3a5a8c;
+        color: white !important;
+        transform: translateY(-1px);
+    }
 </style>
 
 <nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="/listings"><i class="fa-regular fa-compass"></i></a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav">
-        <a class="nav-link" href="/listings">Explore</a>        
-      </div>
-      <div class="navbar-nav ms-auto">
-        <form class="d-flex" role="search">
-          <input class="form-control me-2 search-inp" type="search" placeholder="Search destinations">
-          <button class="btn search-btn" type="submit"><i class="fa-solid fa-magnifying-glass"></i>Search</button>
-        </form>
-      </div>
-      <div class="navbar-nav ms-auto">
-        <a class="nav-link" href="/listings/new">Airbnb your home</a>
-        <% if(currUser) { %>
-          <a class="nav-link" href="/logout"><b>Log out</b></a>
-          <% } else { %>
-            <a class="nav-link" href="/signup"><b>Sign up</b></a>
-            <a class="nav-link" href="/login"><b>Log in</b></a>
-            <% } %>
-      </div>
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/listings"><i class="fa-regular fa-compass"></i></a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+                <a class="nav-link" href="/listings">Explore</a>
+            </div>
+            <div class="navbar-nav ms-auto">
+                <form class="d-flex" role="search" id="searchForm">
+                    <input class="form-control me-2 search-inp" id="query" type="search" placeholder="Search destinations">
+                    <div id="suggestions"></div>
+                    <button class="btn search-btn" type="submit"><i
+                            class="fa-solid fa-magnifying-glass"></i>Search</button>
+                </form>
+            </div>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/listings/new">Airbnb your home</a>
+                
+                    <a class="nav-link dashboard-link" href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    <a class="nav-link" href="/logout"><b>Log out</b></a>
+                
+                        <a class="nav-link" href="/signup"><b>Sign up</b></a>
+                        <a class="nav-link" href="/login"><b>Log in</b></a>
+                        
+            </div>
+        </div>
     </div>
-  </div>
+</nav> -->
+
+<style>
+    .navbar {
+        background-color: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        padding: 0.8rem 1rem;
+    }
+
+    .navbar-brand {
+        font-size: 1.8rem;
+        color: #ff385c;
+        transition: transform 0.3s ease;
+    }
+
+    .navbar-brand:hover {
+        transform: rotate(15deg);
+        color: #ff385c;
+    }
+
+    /* Fix: Ensure nav-link colors are specific to navbar */
+    .navbar .nav-link {
+        font-weight: 500;
+        color: #333 !important; /* Important to override any conflicting styles */
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        margin: 0 0.2rem;
+        transition: all 0.2s ease;
+    }
+
+    .navbar .nav-link:hover {
+        color: #ff385c !important; /* Important to override any conflicting styles */
+        background-color: rgba(255, 56, 92, 0.1);
+    }
+
+    .search-btn {
+        background-color: #ff385c;
+        color: white;
+        border-radius: 25px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: none;
+    }
+
+    .search-btn:hover {
+        background-color: #e61e4d;
+        transform: scale(1.02);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-inp {
+        border-radius: 25px;
+        padding: 0.5rem 1.5rem;
+        border: 1px solid #ddd;
+        width: 250px;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .search-inp:focus {
+        border-color: #ff385c;
+        box-shadow: 0 0 0 2px rgba(255, 56, 92, 0.2);
+        outline: none;
+    }
+
+    #suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        z-index: 1000;
+        margin-top: 4px;
+        overflow: hidden;
+        display: none;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .suggestion-item {
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid #f5f5f5;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+
+    .suggestion-item:last-child {
+        border-bottom: none;
+    }
+
+    .suggestion-item:hover {
+        background-color: rgba(255, 56, 92, 0.05);
+        color: #ff385c;
+    }
+
+    .suggestion-item::before {
+        content: "📍";
+        margin-right: 10px;
+        font-size: 1rem;
+    }
+
+    .suggestion-item.active {
+        background-color: rgba(255, 56, 92, 0.1);
+        color: #ff385c;
+    }
+
+    .no-suggestions {
+        padding: 12px 16px;
+        color: #888;
+        font-style: italic;
+        text-align: center;
+    }
+
+    @media (max-width: 992px) {
+        .search-container {
+            width: 100%;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .search-inp {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .search-btn {
+            width: 100%;
+            margin-left: 0 !important;
+        }
+
+        .navbar-nav.ms-auto {
+            margin-top: 1rem;
+        }
+        
+        #suggestions {
+            position: relative;
+            margin-top: 0;
+            border-radius: 0 0 12px 12px;
+        }
+    }
+</style>
+
+<nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="/listings"><i class="fa-solid fa-compass"></i> WanderLust</a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+            aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/listings"><i class="fas fa-search me-1"></i> Explore</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/listings/new"><i class="fas fa-home me-1"></i> Airbnb your home</a>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center">
+                <div class="search-container">
+                    <form class="d-flex" role="search" id="searchForm">
+                        <input class="form-control search-inp" id="query" type="search" placeholder="Search destinations..."
+                            aria-label="Search" autocomplete="off">
+                        <button class="btn search-btn ms-2" type="submit">
+                            <i class="fa-solid fa-magnifying-glass me-1"></i>Search
+                        </button>
+                    </form>
+                    <div id="suggestions"></div>
+                </div>
+
+                <div class="dropdown ms-3">
+                    <% if(currUser) { %>
+                        <a class="btn btn-outline-secondary rounded-pill dropdown-toggle" href="#" role="button"
+                            id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-1"></i> Account
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="/dashboard"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Log out</a></li>
+                        </ul>
+                        <% } else { %>
+                            <div class="d-flex">
+                                <a class="btn btn-outline-dark rounded-pill me-2" href="/login">Log in</a>
+                                <a class="btn btn-dark rounded-pill" href="/signup">Sign up</a>
+                            </div>
+                            <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
 </nav>
+
+<script>
+    const input = document.getElementById("query");
+    const suggestions = document.getElementById("suggestions");
+    const searchForm = document.getElementById("searchForm");
+
+    let timeout;
+    let currentFocus = -1;
+
+    input.addEventListener("input", () => {
+        clearTimeout(timeout);
+        const query = input.value.trim();
+
+        if (!query) {
+            suggestions.style.display = "none";
+            currentFocus = -1;
+            return;
+        }
+        
+        timeout = setTimeout(async () => {
+            try {
+                const res = await fetch(
+                    `http://localhost:8080/listings/api/suggestions?q=${encodeURIComponent(query)}`
+                );
+                const data = await res.json();
+
+                if (data.length === 0) {
+                    suggestions.innerHTML = '<div class="no-suggestions">No destinations found</div>';
+                    suggestions.style.display = "block";
+                    return;
+                }
+
+                suggestions.innerHTML = data
+                    .map(
+                        (s) => `<div class="suggestion-item">${s.location}</div>`
+                    )
+                    .join("");
+                suggestions.style.display = "block";
+                currentFocus = -1;
+
+                document.querySelectorAll(".suggestion-item").forEach((item, index) => {
+                    item.addEventListener("click", () => {
+                        input.value = item.textContent;
+                        suggestions.style.display = "none";
+                        performSearch(item.textContent);
+                    });
+                    
+                    item.addEventListener("mouseover", () => {
+                        // Remove active class from all items
+                        document.querySelectorAll(".suggestion-item").forEach(el => {
+                            el.classList.remove("active");
+                        });
+                        // Add active class to hovered item
+                        item.classList.add("active");
+                        currentFocus = index;
+                    });
+                });
+            } catch (error) {
+                console.error("Error fetching suggestions:", error);
+                suggestions.innerHTML = '<div class="no-suggestions">Error loading suggestions</div>';
+                suggestions.style.display = "block";
+            }
+        }, 300);
+    });
+
+    // Keyboard navigation for suggestions
+    input.addEventListener("keydown", (e) => {
+        const items = document.querySelectorAll(".suggestion-item");
+        
+        if (items.length > 0) {
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                currentFocus = (currentFocus + 1) % items.length;
+                updateActiveItem(items);
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                currentFocus = (currentFocus - 1 + items.length) % items.length;
+                updateActiveItem(items);
+            } else if (e.key === "Enter" && currentFocus > -1) {
+                e.preventDefault();
+                input.value = items[currentFocus].textContent;
+                suggestions.style.display = "none";
+                performSearch(items[currentFocus].textContent);
+            }
+        }
+    });
+
+    function updateActiveItem(items) {
+        items.forEach(item => item.classList.remove("active"));
+        if (currentFocus > -1) {
+            items[currentFocus].classList.add("active");
+            // Scroll into view if needed
+            items[currentFocus].scrollIntoView({ block: "nearest" });
+        }
+    }
+
+    document.addEventListener("click", (e) => {
+        if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+            suggestions.style.display = "none";
+            currentFocus = -1;
+        }
+    });
+
+    searchForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        performSearch(input.value);
+        suggestions.style.display = "none";
+        currentFocus = -1;
+    });
+
+    async function performSearch(q) {
+        if (q.trim()) {
+            window.location.href = `http://localhost:8080/listings/api/search?q=${encodeURIComponent(q)}`;
+        }
+    }
+
+    // Ensure Bootstrap dropdowns work correctly
+    document.addEventListener('DOMContentLoaded', function() {
+        var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
+        var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+            return new bootstrap.Dropdown(dropdownToggleEl);
+        });
+    });
+</script>

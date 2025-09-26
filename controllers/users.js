@@ -1,3 +1,6 @@
+const booking = require("../models/booking");
+const Listing = require("../models/listing");
+const review = require("../models/review");
 const User = require("../models/user");
 
 module.exports.renderSignupForm = (req, res) => {
@@ -41,4 +44,18 @@ module.exports.logout = (req, res, next) => {
         req.flash("success", "You are logged out!");
         res.redirect("/listings");
     });
+}
+
+module.exports.renderDashboard = async (req, res) => {
+    const userId = req.user._id;
+    const myBookings = await booking.find({user: userId}).populate("listing");
+
+    const myListings = await Listing.find({owner: userId});
+
+    const bookingsOnMyListings = await booking.find({
+        listing: {$in: myListings.map(l => l._id)}
+    })
+        .populate("user")
+        .populate("listing");
+    res.render("users/dashboard", {myBookings, bookingsOnMyListings, currUser: req.user});
 }

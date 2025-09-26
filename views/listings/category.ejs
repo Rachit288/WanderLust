@@ -1,0 +1,251 @@
+<% layout("/layouts/boilerplate.ejs") %>
+
+<style>
+    /* Enhanced color scheme */
+    :root {
+        --primary-color: #ff385c;
+        --primary-light: rgba(255, 56, 92, 0.1);
+        --secondary-color: #00a699;
+        --accent-color: #ff5a5f;
+        --dark-text: #222222;
+        --medium-text: #717171;
+        --light-bg: #f7f7f7;
+        --card-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        --hover-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+    }
+
+    .category-container {
+        padding: 2rem 0;
+        margin: 0 auto;
+        max-width: 1200px;
+    }
+
+    .category-title {
+        color: #2c3e50;
+        font-weight: 600;
+        text-align: center;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Listing cards enhancements - Same as index.ejs */
+    .listing-card {
+        margin-bottom: 2rem;
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+            box-shadow 0.4s ease,
+            opacity 0.4s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        opacity: 0;
+        animation: fadeInUp 0.6s ease forwards;
+        position: relative;
+        /* height: 100%; */
+    }
+
+    .listing-card:nth-child(1) { animation-delay: 0.1s; }
+    .listing-card:nth-child(2) { animation-delay: 0.2s; }
+    .listing-card:nth-child(3) { animation-delay: 0.3s; }
+    .listing-card:nth-child(4) { animation-delay: 0.4s; }
+    .listing-card:nth-child(5) { animation-delay: 0.5s; }
+    .listing-card:nth-child(6) { animation-delay: 0.6s; }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .listing-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .card-img-top {
+        height: 20rem;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+        position: relative;
+    }
+
+    .listing-card:hover .card-img-top {
+        transform: scale(1.05);
+    }
+
+    .card-img-overlay {
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .listing-card:hover .card-img-overlay {
+        opacity: 1;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+        position: relative;
+    }
+
+    .card-text {
+        margin: 0;
+        color: var(--dark-text);
+        transition: color 0.3s ease;
+    }
+
+    .card-text b {
+        font-size: 1.1rem;
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--dark-text);
+    }
+
+    .price {
+        font-weight: 600;
+        color: var(--dark-text);
+        font-size: 1.05rem;
+    }
+
+    .listing-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+
+    .listing-link:hover {
+        transform: scale(1.01);
+    }
+
+    /* Loading animation for images */
+    .card-img-top {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+
+    @keyframes loading {
+        0% {
+            background-position: 200% 0;
+        }
+        100% {
+            background-position: -200% 0;
+        }
+    }
+
+    .tax-info {
+        display: none;
+        color: var(--medium-text);
+        font-size: 0.85rem;
+        transition: opacity 0.3s ease;
+    }
+
+    /* Responsive improvements */
+    @media (max-width: 768px) {
+        .category-container {
+            padding: 1rem;
+        }
+        
+        .category-title {
+            font-size: 1.5rem;
+            margin-bottom: 2rem !important;
+        }
+        
+        .card-img-top {
+            height: 18rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .card-img-top {
+            height: 16rem;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        .card-text b {
+            font-size: 1rem;
+        }
+        
+        .price {
+            font-size: 0.95rem;
+        }
+    }
+</style>
+
+<div class="category-container">
+    <h2 class="category-title">Listings in <%= category %></h2>
+
+    <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 g-4">
+        <% for(listing of listings) { %>
+            <div class="col">
+                <a href="/listings/<%= listing._id %>" class="listing-link">
+                    <div class="card listing-card">
+                        <img src="<%= listing.image.url %>" class="card-img-top" alt="<%= listing.title %>">
+                        <div class="card-img-overlay"></div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                <b>
+                                    <%= listing.title %>
+                                </b>
+                                <span class="price">&#8377; <%= listing.price.toLocaleString("en-IN") %>/per night</span>
+                                <i class="tax-info">&nbsp; &nbsp; +18% GST</i>
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<script>
+    // Tax toggle functionality with animation
+    let taxSwitch = document.getElementById("flexSwitchCheckDefault");
+    if (taxSwitch) {
+        taxSwitch.addEventListener("change", () => {
+            let taxInfo = document.getElementsByClassName("tax-info");
+            for (info of taxInfo) {
+                if (info.style.display != "inline") {
+                    info.style.display = "inline";
+                    info.style.opacity = "0";
+                    setTimeout(() => {
+                        info.style.opacity = "1";
+                    }, 10);
+                } else {
+                    info.style.opacity = "0";
+                    setTimeout(() => {
+                        info.style.display = "none";
+                    }, 300);
+                }
+            }
+        });
+    }
+
+    // Image loading animation removal once loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.card-img-top').forEach(img => {
+            img.addEventListener('load', function() {
+                this.style.background = 'none';
+                this.style.animation = 'none';
+            });
+            
+            // If image is already loaded (cached)
+            if (img.complete) {
+                img.style.background = 'none';
+                img.style.animation = 'none';
+            }
+        });
+    });
+</script>

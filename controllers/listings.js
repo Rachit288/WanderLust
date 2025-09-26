@@ -1,3 +1,5 @@
+const { getCollection } = require("../db.js");
+const booking = require("../models/booking.js");
 const Listing = require("../models/listing.js");
 const axios = require('axios');
 const mapToken = process.env.MAP_TOKEN;
@@ -25,7 +27,16 @@ module.exports.showListing = async (req, res) => {
         req.flash("error", "Listing you requested for does not exist");
         return res.redirect("/listings");
     }
-    res.render("listings/show.ejs", { listing });
+    
+    const bookings = await booking.find({listing: listing._id});
+    const bookedDates = bookings.map(booking => {
+        return {
+            from: booking.startDate.toISOString().split("T")[0],
+            to: booking.endDate.toISOString().split("T")[0]
+        };
+    });
+
+    res.render("listings/show.ejs", { listing, mapToken, bookedDates });
 }
 
 module.exports.createListing = async (req, res, next) => {
@@ -39,7 +50,7 @@ module.exports.createListing = async (req, res, next) => {
     newListing.owner = req.user._id;
     newListing.image = { url, filename };
     newListing.geometry = response.data.features[0].geometry;
-    let savedListing =  await newListing.save();
+    let savedListing = await newListing.save();
     console.log(savedListing);
     req.flash("success", "New Listing Created!");
     res.redirect("/listings");
@@ -77,4 +88,166 @@ module.exports.destroyListing = async (req, res) => {
     console.log(deletedListing);
     req.flash("success", "Listing Deleted!");
     res.redirect("/listings");
+}
+
+module.exports.showSuggestions = async (req, res) => {
+    const collection = getCollection();
+    const query = req.query.q || "";
+
+    const pipeline = [
+        {
+            '$search': {
+                'index': 'default',
+                'compound': {
+                    'should': [
+                        {
+                            'autocomplete': {
+                                query,
+                                'path': 'location',
+                                'tokenOrder': 'any',
+                                'fuzzy': {
+                                    'maxEdits': 2,
+                                    'prefixLength': 1,
+                                    'maxExpansions': 256
+                                }
+                            }
+                        },
+                        {
+                            'autocomplete': {
+                                query,
+                                'path': 'title',
+                                'tokenOrder': 'any',
+                                'fuzzy': {
+                                    'maxEdits': 2,
+                                    'prefixLength': 1,
+                                    'maxExpansions': 256
+                                }
+                            }
+                        },
+                    ]
+                }
+            },
+        }, {
+            '$limit': 4
+        }, {
+            '$project': {
+                '_id': 0,
+                'title': 1,
+                'location': 1,
+            }
+        }
+
+    ];
+
+    try {
+        const results = await collection.aggregate(pipeline).toArray();
+        res.json(results);
+    } catch (err) {
+        console.error("❌ Suggestion error:", err);
+        res.status(500).json({ error: "Failed to fetch suggestions" });
+    }
+}
+
+module.exports.searchResults = async (req, res) => {
+    const collection = getCollection();
+    const query = req.query.q || "";
+    const mapUrl = `https://api.maptiler.com/geocoding/${encodeURIComponent(query)}.json?key=${mapToken}`;
+    const response = await axios.get(mapUrl);
+    const coord = response.data.features[0].geometry;
+
+    const agg = [
+        {
+            '$search': {
+                'index': 'default',
+                'compound': {
+                    'should': [
+                        {
+                            'autocomplete': {
+                                'path': 'location',
+                                query,
+                                'tokenOrder': 'any',
+                                'fuzzy': {
+                                    'maxEdits': 1,
+                                    'prefixLength': 1,
+                                    'maxExpansions': 256
+                                }
+                            }
+                        },
+                        {
+                            'autocomplete': {
+                                'path': 'title',
+                                query,
+                                'tokenOrder': 'any',
+                                'fuzzy': {
+                                    'maxEdits': 1,
+                                    'prefixLength': 1,
+                                    'maxExpansions': 256
+                                }
+                            }
+                        },
+                        {
+                            'text': {
+                                'path': ['description', 'location', 'title', 'country'],
+                                query,
+                                'fuzzy': {
+                                    'maxEdits': 1,
+                                    'prefixLength': 1,
+                                    'maxExpansions': 256
+                                }
+                            }
+                        },
+
+                    ],
+                    'filter': [
+                        {
+                            'geoWithin': {
+                                'circle': {
+                                    'center': coord,
+                                    'radius': 10000,
+                                },
+                                'path': "geometry"
+                            }
+                        }
+                    ]
+                },
+                'highlight': {
+                    'path': ['description', 'country', 'location', 'title']
+                }
+            }
+        }, {
+            '$limit': 10
+        }, {
+            '$project': {
+                '_id': 1,
+                'title': 1,
+                'description': 1,
+                'price': { '$convert': { 'input': "$price", 'to': "double" } },
+                'location': 1,
+                'geometry': {
+                    'coordinates': 1
+                },
+                'image': {
+                    'url': 1
+                },
+                'highlights': {
+                    '$meta': 'searchHighlights'
+                }
+            }
+        }
+    ];
+    try {
+        const results = await collection.aggregate(agg).toArray();
+
+        res.render("listings/searchResults.ejs", { results, query, coord });
+    } catch (err) {
+        console.error("❌ Aggregation error:", err);
+        res.status(500).json({ error: "Search failed" });
+    }
+}
+
+module.exports.listByCategory = async (req, res) => {
+    const { category } = req.params;
+    const listings = await Listing.find({ category });
+
+    res.render("listings/category.ejs", { listings, category });
 }
