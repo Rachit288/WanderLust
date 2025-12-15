@@ -1,4 +1,4 @@
-if(process.env.NODE_ENV != "production") {
+if (process.env.NODE_ENV != "production") {
     require("dotenv").config();
 }
 
@@ -16,7 +16,10 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user.js");
 
-
+const apiReviewRouter = require("./routes/api/review.js");
+const apiUserRouter = require("./routes/api/user.js");
+const apiListingRouter = require("./routes/api/listing.js");
+const apiBookingRouter = require("./routes/api/booking.js");
 const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
@@ -33,7 +36,7 @@ main()
         console.log(err);
     });
 
-    initDB().then(() => console.log("✅ DB ready"));
+initDB().then(() => console.log("✅ DB ready"));
 async function main() {
     await mongoose.connect(dbUrl);
 };
@@ -65,13 +68,10 @@ const sessionOptions = {
     cookie: {
         expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
         maxAge: 7 * 24 * 60 * 60 * 1000,
-        httpOnly: true 
+        httpOnly: true
     }
 }
 
-// app.get("/", (req, res) => {
-//     res.send("Hi, I am root");
-// });
 
 app.use(session(sessionOptions));
 app.use(flash());
@@ -90,16 +90,11 @@ app.use((req, res, next) => {
     next();
 });
 
-// app.get("/demouser", async(req, res) => {
-//     let fakeUser = new User({
-//         email: "student@gmail.com",
-//         username: "delta-student"
-//     });
-
-//     let registeredUser = await User.register(fakeUser, "helloworld");
-//     res.send(registeredUser);
-// })
-
+app.use("/api/v1/listings", apiListingRouter);
+app.use("/api/v1/user", apiUserRouter);
+// Note: We mount this under listings because of mergeParams
+app.use("/api/v1/listings/:id/reviews", apiReviewRouter);
+app.use("/api/v1/bookings", apiBookingRouter);
 app.use("/listings", listingRouter);
 app.use("/listings/:id/reviews", reviewRouter);
 app.use("/", userRouter);

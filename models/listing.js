@@ -13,6 +13,12 @@ const listingSchema = new Schema({
         url: String,
         filename: String
     },
+    gallery: [
+        {
+            url: String,
+            filename: String
+        }
+    ],
     price: Number,
     location: String,
     country: String,
@@ -40,18 +46,29 @@ const listingSchema = new Schema({
     category: {
         type: [String],
         enum: [
-            "Trending",
-            "Rooms",
-            "Iconic-Cities",
-            "Mountains",
-            "Castles",
-            "Amazing-Pools",
-            "Camping",
-            "Farms",
-            "Arctic",
-            "Domes",
-            "Boats"
+            "Architectural Gems",
+            "Private Islands",
+            "Urban Lofts",
+            "Forest Retreats",
+            "Historic Castles",
+            "Alpine Chalets",
+            "Desert Oases",
+            "Vineyard Estates",
+            "Cliffside Havens",
+            "Modern Glasshouses"
         ]
+    },
+    maxGuests: {
+        type: Number,
+        required: true,
+        default: 1
+    },
+    amenities: {
+        type: [String],
+        default: []
+    },
+    text_for_ai: {
+        type: String
     }
 });
 
