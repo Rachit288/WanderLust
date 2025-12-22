@@ -14,8 +14,12 @@ const MongoStore = require("connect-mongo");
 const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
+const http = require("http");
+const cors = require("cors");
 const User = require("./models/user.js");
 
+const socket = require('./socket.js');
+const apiChatRouter = require("./routes/api/chat.js");
 const apiReviewRouter = require("./routes/api/review.js");
 const apiUserRouter = require("./routes/api/user.js");
 const apiListingRouter = require("./routes/api/listing.js");
@@ -25,8 +29,15 @@ const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
 const bookingRouter = require("./routes/booking.js");
 const { initDB } = require("./db.js");
+const reminderJob = require("./jobs/reminders.js");
+
 
 const dbUrl = process.env.ATLASDB_URL;
+
+const server = http.createServer(app);
+
+const io = socket.init(server);
+global.io = io;
 
 main()
     .then(() => {
@@ -41,8 +52,33 @@ async function main() {
     await mongoose.connect(dbUrl);
 };
 
+// Middleware to make 'io' accessible in Controllers
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
+
+const corsOptions = {
+    origin: "http://localhost:3000", // Allow your Next.js app
+    credentials: true, // Allow cookies (Session/Auth) to pass through
+    optionSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+
+app.post(
+    '/api/v1/webhook',
+    express.raw({ type: 'application/json' }),
+    (req, res, next) => {
+        req.rawBody = req.body; // Assign raw buffer to req.rawBody
+        next();
+    },
+    require('./controllers/api/webhook').handleWebhook // Call the controller directly
+);
+
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.engine('ejs', ejsMate);
@@ -72,7 +108,6 @@ const sessionOptions = {
     }
 }
 
-
 app.use(session(sessionOptions));
 app.use(flash());
 
@@ -90,11 +125,15 @@ app.use((req, res, next) => {
     next();
 });
 
+reminderJob.startReminders(io);
+
 app.use("/api/v1/listings", apiListingRouter);
-app.use("/api/v1/user", apiUserRouter);
+app.use("/api/v1/users", apiUserRouter);
 // Note: We mount this under listings because of mergeParams
 app.use("/api/v1/listings/:id/reviews", apiReviewRouter);
 app.use("/api/v1/bookings", apiBookingRouter);
+app.use("/api/v1/chat", apiChatRouter);
+
 app.use("/listings", listingRouter);
 app.use("/listings/:id/reviews", reviewRouter);
 app.use("/", userRouter);
@@ -109,6 +148,6 @@ app.use((err, req, res, next) => {
     res.status(statusCode).render("Error.ejs", { message });
 });
 
-app.listen(8080, "0.0.0.0", () => {
+server.listen(8080, "0.0.0.0", () => {
     console.log("server is listening to port 8080");
 });

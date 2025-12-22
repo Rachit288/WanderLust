@@ -11,7 +11,15 @@ router.post("/login", passport.authenticate("local"), apiUserController.login);
 
 router.get("/logout", apiUserController.logout);
 
-router.get("dashboard", isLoggedIn, apiUserController.getDashboard);
+router.get("/dashboard", isLoggedIn, apiUserController.getDashboard);
+
+router.get("/dashboard/bookings", isLoggedIn, apiUserController.getMyBookings);
+
+router.get("/dashboard/listings", isLoggedIn, apiUserController.getMyListings);
+
+router.get("/dashboard/watchlist", isLoggedIn, apiUserController.getWatchlist);
+
+router.get("/dashboard/recommendations", isLoggedIn, apiUserController.getAIRecommendations);
 
 router.get("/me", apiUserController.getCurrentUser);
 

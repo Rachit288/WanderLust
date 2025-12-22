@@ -16,6 +16,21 @@ module.exports.createReview = async (req, res) => {
         await newReview.save();
         await listing.save();
 
+        // --- NOTIFICATION TRIGGER: NEW REVIEW ---
+        const notif = await Notification.create({
+            recipient: listing.owner._id, // The Host
+            sender: req.user._id,         // The Reviewer
+            type: "NEW_REVIEW",
+            message: `New ${newReview.rating} review from ${req.user.username} on ${listing.title}!`,
+            relatedId: listing._id,
+            relatedModel: "Listing"
+        });
+
+        // Real-Time Alert (Socket.io)
+        if (req.io) {
+            req.io.to(listing.owner._id.toString()).emit("new_notification", notif);
+        }
+
         await newReview.populate("author", "username");
 
         res.status(201).json({

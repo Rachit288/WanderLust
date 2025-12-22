@@ -12,24 +12,27 @@ const { isLoggedIn, isOwner, validateListing } = require("../../middleware.js");
 
 // Configure Uploads: 1 Main Image, up to 10 Gallery Images
 const uploadFields = upload.fields([
-    { name: 'listing[image]', maxCount: 1 }, 
+    { name: 'listing[image]', maxCount: 1 },
     { name: 'listing[gallery]', maxCount: 10 }
 ]);
 
 router.route("/")
     .get(wrapAsync(apiListingController.index))
     .post(
-        isLoggedIn, 
+        isLoggedIn,
         uploadFields, // <--- Updated to handle multiple files
         // validateListing, // validation might fail if schema requires files not yet processed, enable carefully
         wrapAsync(apiListingController.createListing)
     );
 
+
+router.get("/collections", wrapAsync(apiListingController.getCollections));
+
 router.route("/:id")
     .get(wrapAsync(apiListingController.showListing))
     .put(
-        isLoggedIn, 
-        isOwner, 
+        isLoggedIn,
+        isOwner,
         uploadFields, // <--- Updated here too
         // validateListing, 
         wrapAsync(apiListingController.updateListing)

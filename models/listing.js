@@ -44,7 +44,7 @@ const listingSchema = new Schema({
         }
     },
     category: {
-        type: [String],
+        type: String,
         enum: [
             "Architectural Gems",
             "Private Islands",
@@ -72,11 +72,20 @@ const listingSchema = new Schema({
     }
 });
 
+listingSchema.pre("save", function (next) {
+  if (Array.isArray(this.category)) {
+    this.category = this.category[0];
+  }
+  next();
+});
+
 listingSchema.post("findOneAndDelete", async (listing) => {
     if (listing) {
         await Review.deleteMany({ _id: { $in: listing.reviews } });
     }
 });
+
+listingSchema.index({ owner: 1, createdAt: -1 });
 
 const Listing = mongoose.model("Listing", listingSchema);
 

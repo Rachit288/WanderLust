@@ -32,7 +32,15 @@ const bookingSchema = new Schema({
     totalPrice: {
         type: Number,
         required: true
-    }
+    },
+    status: {
+        type: String,
+        enum: ["pending", "confirmed", "cancelled"], 
+        default: "pending" // All bookings start as pending
+    },
+    paymentIntentId: {
+        type: String, // Stripe's unique ID for this transaction
+    },
 });
 
 module.exports = mongoose.model("Booking", bookingSchema);

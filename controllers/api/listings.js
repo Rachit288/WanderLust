@@ -1,19 +1,60 @@
 const Listing = require("../../models/listing.js");
+const Notification = require("../../models/notification.js");
+const User = require("../../models/user.js");
 const axios = require('axios');
 const { getEmbedding, getRecommendations } = require("../../utils/aiService");
 
 const mapToken = process.env.MAP_TOKEN;
 
+module.exports.getCollections = async (req, res) => {
+    try {
+        const targetCategories = [
+            "Architectural Gems",
+            "Private Islands",
+            "Urban Lofts",
+            "Forest Retreats",
+            "Historic Castles",
+            "Alpine Chalets",
+            "Desert Oases",
+            "Vineyard Estates",
+            "Cliffside Havens",
+            "Modern Glasshouses"
+        ];
+
+        const stats = await Listing.aggregate([
+            { $match: { category: { $in: targetCategories } } },
+            { $group: { _id: "$category", count: { $sum: 1 } } }
+        ]);
+
+        // Transform into a cleaner object
+        // e.g., { "Mountains": 12, "Castles": 5 }
+        const counts = {};
+        stats.forEach(item => {
+            counts[item._id] = item.count;
+        });
+
+        res.status(200).json(counts);
+    } catch (error) {
+        res.status(500).json({ message: "Failed to fetch collection stats" });
+    }
+}
+
 module.exports.index = async (req, res) => {
-    const allListings = await Listing.find({});
-    // Return JSON instead of render
-    res.status(200).json(allListings);
+    const { category } = req.query; // Check if ?category=Mountains exists
+    let query = {};
+
+    if (category) {
+        query.category = category; // Filter by category
+    }
+
+    const allListings = await Listing.find(query);
+    res.json(allListings);
 };
 
 module.exports.showListing = async (req, res) => {
     let { id } = req.params;
     const listing = await Listing.findById(id)
-        .populate({ path: "reviews", populate: { path: "author" }})
+        .populate({ path: "reviews", populate: { path: "author" } })
         .populate("owner");
 
     if (!listing) {
@@ -39,6 +80,10 @@ module.exports.createListing = async (req, res) => {
         // 1. Handle Geocoding
         const mapUrl = `https://api.maptiler.com/geocoding/${encodeURIComponent(listingData.location)}.json?key=${mapToken}`;
         const mapResponse = await axios.get(mapUrl);
+       
+        if (Array.isArray(listingData.category)) {
+            listingData.category = listingData.category[0];
+        }
 
         // 2. Initialize Listing Object
         const newListing = new Listing(listingData);
@@ -62,17 +107,14 @@ module.exports.createListing = async (req, res) => {
 
         // 4. --- AI INTEGRATION ---
         // Format array fields for the text blob
-        const amenitiesStr = Array.isArray(listingData.amenities) 
-            ? listingData.amenities.join(", ") 
+        const amenitiesStr = Array.isArray(listingData.amenities)
+            ? listingData.amenities.join(", ")
             : listingData.amenities || "";
-            
-        const categoryStr = Array.isArray(listingData.category) 
-            ? listingData.category.join(", ") 
-            : listingData.category || "";
+
 
         const textForAI = `
             Title: ${newListing.title}
-            Category: ${categoryStr}
+            Category: ${newListing.category}
             Location: ${newListing.location}, ${newListing.country}
             Description: ${newListing.description}
             Amenities: ${amenitiesStr}
@@ -103,6 +145,12 @@ module.exports.updateListing = async (req, res) => {
         const { id } = req.params;
         const updateData = req.body.listing;
 
+        if (Array.isArray(updateData.category)) {
+            updateData.category = updateData.category[0];
+        }
+
+        const oldListing = await Listing.findById(id);
+
         // 1. Find and Update Basic Fields
         let listing = await Listing.findByIdAndUpdate(id, { ...updateData }, { new: true });
 
@@ -126,12 +174,12 @@ module.exports.updateListing = async (req, res) => {
 
         // 3. --- RE-CALCULATE AI VECTOR ---
         // Since description, amenities, or category might have changed, we must update the vector.
-        const amenitiesStr = Array.isArray(listing.amenities) 
-            ? listing.amenities.join(", ") 
+        const amenitiesStr = Array.isArray(listing.amenities)
+            ? listing.amenities.join(", ")
             : listing.amenities || "";
-            
-        const categoryStr = Array.isArray(listing.category) 
-            ? listing.category.join(", ") 
+
+        const categoryStr = Array.isArray(listing.category)
+            ? listing.category.join(", ")
             : listing.category || "";
 
         const textForAI = `
@@ -145,12 +193,37 @@ module.exports.updateListing = async (req, res) => {
         `.trim();
 
         listing.text_for_ai = textForAI;
-        
+
         const vector = await getEmbedding(textForAI);
         if (vector && vector.length > 0) {
             listing.embedding = vector;
         }
         // ---------------------------------
+
+        // --- 3. SMART NOTIFICATION: PRICE DROP ---
+        // Check if price dropped by at least 10% (avoid spamming for small changes)
+        if (oldListing.price > 0 && listing.price < oldListing.price) {
+            const dropPercentage = ((oldListing.price - listing.price) / oldListing.price) * 100;
+
+            if (dropPercentage >= 10) {
+                const watchers = await User.find({ watchlist: id });
+
+                for (let watcher of watchers) {
+                    const notif = await Notification.create({
+                        recipient: watcher._id,
+                        type: "PRICE_DROP",
+                        message: `Price Drop Alert! Price of ${listing.title} has dropped ${Math.round(dropPercentage)}%.`,
+                        relatedId: listing._id,
+                        relatedModel: "Listing"
+                    });
+
+                    if (req.io) {
+                        req.io.to(watcher._id.toString()).emit("new_notification", notif);
+                    }
+                }
+                console.log(`Sent Price Drop Alert to ${watchers.length} watchers.`);
+            }
+        }
 
         await listing.save();
         res.status(200).json(listing);
