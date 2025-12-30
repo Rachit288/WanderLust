@@ -7,7 +7,7 @@ module.exports.getConversations = async (req, res) => {
 
         const messages = await Message.find({
             $or: [{ sender: currentUserId }, { recipient: currentUserId }]
-        }).populate("sender recipient", "username");
+        }).sort({ createdAt: -1 }).populate("sender recipient", "username");
 
         const usersSet = new Set();
         const conversations = [];

@@ -11,20 +11,20 @@ router.post("/login", passport.authenticate("local"), apiUserController.login);
 
 router.get("/logout", apiUserController.logout);
 
-router.get("/dashboard", isLoggedIn, apiUserController.getDashboard);
+router.get("/bookings", isLoggedIn, apiUserController.getMyBookings);
 
-router.get("/dashboard/bookings", isLoggedIn, apiUserController.getMyBookings);
+router.get("/listings", isLoggedIn, apiUserController.getMyListings);
 
-router.get("/dashboard/listings", isLoggedIn, apiUserController.getMyListings);
+router.get("/watchlist", isLoggedIn, apiUserController.getWatchlist);
 
-router.get("/dashboard/watchlist", isLoggedIn, apiUserController.getWatchlist);
-
-router.get("/dashboard/recommendations", isLoggedIn, apiUserController.getAIRecommendations);
+router.get("/recommendations", isLoggedIn, apiUserController.getAIRecommendations);
 
 router.get("/me", apiUserController.getCurrentUser);
 
 router.post("/history", isLoggedIn, wrapAsync(apiUserController.addToHistory));
 
 router.post("/watchlist", isLoggedIn, wrapAsync(apiUserController.toggleWatchlist));
+
+router.get("/:id", apiUserController.getUserById);
 
 module.exports = router;

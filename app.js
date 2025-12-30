@@ -24,6 +24,8 @@ const apiReviewRouter = require("./routes/api/review.js");
 const apiUserRouter = require("./routes/api/user.js");
 const apiListingRouter = require("./routes/api/listing.js");
 const apiBookingRouter = require("./routes/api/booking.js");
+const apiNotificationRouter = require("./routes/api/notification.js");
+const apiAiRouter = require("./routes/api/ai.js");
 const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
@@ -133,11 +135,13 @@ app.use("/api/v1/users", apiUserRouter);
 app.use("/api/v1/listings/:id/reviews", apiReviewRouter);
 app.use("/api/v1/bookings", apiBookingRouter);
 app.use("/api/v1/chat", apiChatRouter);
+app.use("/api/v1/notifications", apiNotificationRouter);
+app.use("/api/v1/ai", apiAiRouter);
 
-app.use("/listings", listingRouter);
-app.use("/listings/:id/reviews", reviewRouter);
-app.use("/", userRouter);
-app.use("/bookings", bookingRouter);
+// app.use("/listings", listingRouter);
+// app.use("/listings/:id/reviews", reviewRouter);
+// app.use("/", userRouter);
+// app.use("/bookings", bookingRouter);
 
 app.use("*", (req, res, next) => {
     next(new ExpressError(404, "Page not found!"));

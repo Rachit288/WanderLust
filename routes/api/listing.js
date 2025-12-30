@@ -28,6 +28,12 @@ router.route("/")
 
 router.get("/collections", wrapAsync(apiListingController.getCollections));
 
+router.get("/suggestions", wrapAsync(apiListingController.showSuggestions));
+
+router.get("/search", wrapAsync(apiListingController.searchResults));
+
+router.get("/searchListings", wrapAsync(apiListingController.searchListings));
+
 router.route("/:id")
     .get(wrapAsync(apiListingController.showListing))
     .put(
@@ -38,5 +44,6 @@ router.route("/:id")
         wrapAsync(apiListingController.updateListing)
     )
     .delete(isLoggedIn, isOwner, wrapAsync(apiListingController.destroyListing));
+
 
 module.exports = router;

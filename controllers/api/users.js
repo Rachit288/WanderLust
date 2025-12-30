@@ -206,3 +206,23 @@ module.exports.toggleWatchlist = async (req, res) => {
     res.status(500).json({ message: "Failed to toggle watchlist" });
   }
 };
+
+module.exports.getUserById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        // Import User model if not already at top of file
+        const User = require('../../models/user'); 
+        
+        // Fetch safe public details only
+        const user = await User.findById(id).select('username email _id');
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json(user);
+    } catch (err) {
+        console.error("Error fetching user:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};

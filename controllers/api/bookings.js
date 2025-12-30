@@ -7,8 +7,13 @@ const User = require("../../models/user");
 
 module.exports.initiateBooking = async (req, res) => {
     try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
         const { id } = req.params;
         const { startDate, endDate, guestCount } = req.body;
+        const userId = req.user._id;
 
         if (!startDate || !endDate || !guestCount) {
             return res.status(400).json({ message: "Missing required booking details" });
@@ -20,6 +25,13 @@ module.exports.initiateBooking = async (req, res) => {
         const listing = await Listing.findById(id).populate("owner");
         if (!listing) {
             return res.status(404).json({ message: "Listing not found" });
+        }
+
+        if (listing.owner._id.toString() === userId.toString()) {
+            return res.status(403).json({
+                message: "You cannot book your own sanctuary.",
+                error: "self_booking_not_allowed"
+            });
         }
 
         const overlappingBooking = await Booking.findOne({

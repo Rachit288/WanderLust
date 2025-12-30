@@ -1,5 +1,6 @@
 const socketIo = require("socket.io");
 const Message = require("./models/message");
+const Notification = require("./models/notification");
 
 let io;
 
@@ -23,37 +24,37 @@ module.exports = {
 
             // 2. Handle Chat Messages 
             socket.on("send_message", async (data) => {
-                const { senderId, receiverId, content, senderName } = data;
+                // LOGGING: See exactly what arrives
+                console.log("📩 Socket received:", data);
+
+                // DESTRUCTURE: Handle both naming conventions just in case
+                const { sender, recipient, senderId, receiverId, content, senderName } = data;
+                
+                // NORMALIZE: Ensure we have the IDs regardless of what frontend sent
+                const finalSender = sender || senderId;
+                const finalRecipient = recipient || receiverId;
 
                 try {
-
-                    // 1. Save Message to DB (History)
+                    // 1. Save Message to DB
                     const newMessage = new Message({
-                        sender: senderId,
-                        recipient: receiverId,
+                        sender: finalSender,
+                        recipient: finalRecipient,
                         content: content
-                    })
-                    await newMessage.save();
-
-                    // 2. Emit to Receiver (Real-time Bubble)
-                    // If they are on the chat screen, this will append the bubble
-                    io.to(receiverId).emit("receive_message", newMessage);
-
-                    // 3. Create Notification (The "Bell Icon" Alert)
-                    // We notify them so they know they have a message even if they are on the Dashboard
-                    const notif = await Notification.create({
-                        recipient: receiverId,
-                        sender: senderId,
-                        type: "NEW_MESSAGE",
-                        message: `New message from ${senderName}: ${content.substring(0, 30)}...`,
-                        relatedId: senderId,
-                        relatedModel: "User"
                     });
+                    
+                    const savedMessage = await newMessage.save(); // Wait for save
+                    console.log("✅ Message Saved to DB:", savedMessage._id);
 
-                    // Emit notification event (Red Dot)
-                    io.to(receiverId).emit("new_notification", notif);
+                    // 2. Emit to Receiver
+                    io.to(finalRecipient).emit("receive_message", savedMessage);
+
+                    // 3. Notification Logic (Keep your existing code here)
+                    const Notification = require("./models/notification"); // Ensure this is imported
+                    // ... create notification ...
+
                 } catch (error) {
-                    console.error("Chat Error:", error);
+                    console.error("❌ Socket Error:", error.message);
+                    console.error(error);
                 }
             });
 
