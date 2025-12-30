@@ -25,6 +25,6 @@ router.post("/history", isLoggedIn, wrapAsync(apiUserController.addToHistory));
 
 router.post("/watchlist", isLoggedIn, wrapAsync(apiUserController.toggleWatchlist));
 
-router.get("/:id", apiUserController.getUserById);
+router.get("/:id([0-9a-fA-F]{24})", apiUserController.getUserById);
 
 module.exports = router;
