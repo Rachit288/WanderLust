@@ -35,11 +35,8 @@ const reminderJob = require("./jobs/reminders.js");
 
 
 const dbUrl = process.env.ATLASDB_URL;
-
 const server = http.createServer(app);
 
-const io = socket.init(server);
-global.io = io;
 
 main()
     .then(() => {
@@ -67,6 +64,9 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+const io = socket.init(server);
+global.io = io;
 
 app.post(
     '/api/v1/webhook',
@@ -102,11 +102,13 @@ const sessionOptions = {
     store,
     secret: process.env.SECRET,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
         expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
         maxAge: 7 * 24 * 60 * 60 * 1000,
-        httpOnly: true
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        secure: process.env.NODE_ENV === "production" // Cookies only work over HTTPS
     }
 }
 
