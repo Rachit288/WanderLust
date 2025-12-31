@@ -21,7 +21,7 @@ module.exports.handleWebhook = async (req, res) => {
     // 2. Handle the specific event
     if (event.type === 'payment_intent.succeeded') {
         const paymentIntent = event.data.object;
-        
+
         // Retrieve metadata we sent during checkout
         const { bookingId, listingId, userId } = paymentIntent.metadata;
 
@@ -31,7 +31,7 @@ module.exports.handleWebhook = async (req, res) => {
             // 3. Confirm the Booking in DB
             const booking = await Booking.findOneAndUpdate(
                 { paymentIntentId: paymentIntent.id },
-                { status: "confirmed", paymentStatus: "paid" },
+                { status: "confirmed" },
                 { new: true }
             ).populate("listing");
 
@@ -43,7 +43,7 @@ module.exports.handleWebhook = async (req, res) => {
             const listing = await Listing.findById(listingId).populate("owner");
 
             // 4. Send Real-time Notifications (Same logic as before)
-            
+
             // A. Notify Guest
             const guestNotif = await Notification.create({
                 recipient: userId,
@@ -54,7 +54,7 @@ module.exports.handleWebhook = async (req, res) => {
             });
             // Note: req.io might not work here if webhook is separate process. 
             // Better to use a global IO instance or just save to DB.
-            if(global.io) global.io.to(userId).emit("new_notification", guestNotif);
+            if (global.io) global.io.to(userId).emit("new_notification", guestNotif);
 
             // B. Notify Host
             const hostNotif = await Notification.create({
@@ -65,7 +65,7 @@ module.exports.handleWebhook = async (req, res) => {
                 relatedId: booking._id,
                 relatedModel: "Booking"
             });
-            if(global.io) global.io.to(listing.owner._id.toString()).emit("new_notification", hostNotif);
+            if (global.io) global.io.to(listing.owner._id.toString()).emit("new_notification", hostNotif);
 
             console.log("✅ Booking Confirmed & Notified");
 

@@ -7,10 +7,6 @@ const User = require("../../models/user");
 
 module.exports.initiateBooking = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
         const { id } = req.params;
         const { startDate, endDate, guestCount } = req.body;
         const userId = req.user._id;

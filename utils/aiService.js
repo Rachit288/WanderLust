@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const ML_SERVICE_URL = "http://127.0.0.1:8000";
+const ML_SERVICE_URL = process.env.PYTHON_SERVICE_URL || "http://localhost:8000";
 
 async function getEmbedding(text) {
     try {

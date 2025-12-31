@@ -61,7 +61,7 @@ app.use((req, res, next) => {
 });
 
 const corsOptions = {
-    origin: "http://localhost:3000", // Allow your Next.js app
+    origin: [process.env.FRONTEND_URL, "http://localhost:3000"], // Allow your Next.js app
     credentials: true, // Allow cookies (Session/Auth) to pass through
     optionSuccessStatus: 200
 };

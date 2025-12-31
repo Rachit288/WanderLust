@@ -103,7 +103,7 @@ module.exports.startReminders = (io) => {
             }
 
         } catch (error) {
-            console.error("⚠️ Reminder Job Failed:", err);
+            console.error("⚠️ Reminder Job Failed:", error);
         }
     })
 

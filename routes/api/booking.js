@@ -8,7 +8,9 @@ router.post("/initiate/:id", isLoggedIn, wrapAsync(apiBookingController.initiate
 
 router.post("/confirm", isLoggedIn, wrapAsync(apiBookingController.confirmBooking));
 
-router.get("/:id", wrapAsync(apiBookingController.getBookingsForListing));
+router.get("/:id", wrapAsync(apiBookingController.getBooking));
+
+router.get("/listing/:id", wrapAsync(apiBookingController.getBookingsForListing));
 
 router.put("/:bookingId/cancel", apiBookingController.cancelBooking);
 
