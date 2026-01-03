@@ -183,28 +183,53 @@ module.exports.cancelBooking = async (req, res) => {
         booking.status = "cancelled";
         await booking.save();
 
-        const watchers = await User.find({
-            watchlist: booking.listing._id,
-            _id: { $ne: req.user._id }
-        })
+        try {
+            const formattedDate = new Date(booking.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-        const formattedDate = new Date(booking.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            // A. Notify Guest (Current User)
+            const guestNotification = await Notification.create({
+                recipient: req.user._id,
+                type: "CANCELLED",
+                message: `Your booking for ${booking.listing.title} has been successfully cancelled.`,
+                relatedId: booking._id,
+                relatedModel: "Booking"
+            });
+            if (req.io) req.io.to(req.user._id.toString()).emit("new_notification", guestNotification);
 
-        for (const watcher of watchers) {
-            const notif = await Notification.create({
-                recipient: watcher._id,
-                type: "AVAILABILITY_ALERT",
-                message: `Good news! Date for ${booking.listing.title} just opened up (Starting ${formattedDate})`,
-                relatedId: booking.listing._id,
-                relatedModel: "Listing"
+            // B. Notify Host
+            // Check if owner exists to prevent crashes
+            if (booking.listing.owner && booking.listing.owner.toString() !== req.user._id.toString()) {
+                const hostNotification = await Notification.create({
+                    recipient: booking.listing.owner,
+                    type: "CANCELLED",
+                    message: `Booking Cancelled: ${booking.listing.title} for ${formattedDate} is now free.`,
+                    relatedId: booking._id,
+                    relatedModel: "Booking"
+                });
+                if (req.io) req.io.to(booking.listing.owner.toString()).emit("new_notification", hostNotification);
+            }
+
+            // C. Notify Watchers
+            const watchers = await User.find({
+                watchlist: booking.listing._id,
+                _id: { $ne: req.user._id }
             });
 
-            if (req.io) {
-                req.io.to(watcher._id.toString()).emit("new_notification", notif);
+            for (const watcher of watchers) {
+                const notif = await Notification.create({
+                    recipient: watcher._id,
+                    type: "AVAILABILITY_ALERT",
+                    message: `Good news! Date for ${booking.listing.title} just opened up (Starting ${formattedDate})`,
+                    relatedId: booking.listing._id,
+                    relatedModel: "Listing"
+                });
+                if (req.io) req.io.to(watcher._id.toString()).emit("new_notification", notif);
             }
-        }
 
-        console.log(`Sent Availability Alert to ${watchers.length} watchers.`);
+        } catch (notifError) {
+            // Log the error but DO NOT fail the request
+            console.error("⚠️ Notification failed, but booking was cancelled:", notifError.message);
+        }
 
         res.status(200).json({ message: "Booking cancelled" });
     } catch (error) {
