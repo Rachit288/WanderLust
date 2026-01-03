@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 // Configure your Python Service URL (usually port 8000)
-const PYTHON_SERVICE_URL = "http://localhost:8000";
+const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL;
 1
 module.exports.chat = async (req, res) => {
     try {
