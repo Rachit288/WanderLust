@@ -36,7 +36,7 @@ const IMAGE_URLS = [
     "https://images.unsplash.com/photo-1470770841072-f978cf4d019e", // Lake
     "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2", // Beach
     "https://images.unsplash.com/photo-1505691938895-1758d7feb511", // Colorful Home
-    "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb"  // Luxury Interior
+    "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb"   // Luxury Interior
 ];
 
 const getVisuals = () => {
@@ -52,7 +52,19 @@ const getVisuals = () => {
 
 const getRandomCategory = () => {
     const randomIndex = Math.floor(Math.random() * CATEGORIES.length);
-    return [CATEGORIES[randomIndex]]; // Return as array since schema expects [String]
+    return CATEGORIES[randomIndex]; // Return STRING, not Array
+};
+
+// Safe JSON parser for amenities string
+const safeParseList = (str) => {
+    try {
+        // Replace single quotes with double quotes for valid JSON if needed
+        const cleanStr = str.replace(/'/g, '"'); 
+        return JSON.parse(cleanStr);
+    } catch (e) {
+        // Fallback: simple text parsing if JSON fails
+        return str.replace(/[\[\]']/g, "").split(",").map(s => s.trim()).filter(s => s);
+    }
 };
 
 async function seedDB() {
@@ -60,55 +72,61 @@ async function seedDB() {
         await mongoose.connect(MONGO_URL);
         console.log("✅ Connected to DB");
 
-        // 1. CLEAR EXISTING DATA (Optional - Use carefully!)
+        // --- OPTIONAL: CLEAR OLD DATA ---
+        // Uncomment these lines ONLY if you want to wipe the DB and start fresh.
         // await Listing.deleteMany({});
         // await User.deleteMany({});
         // console.log("🗑️ Cleared old data");
+        // --------------------------------
 
-        // 2. CREATE 3 DUMMY USERS
-        // We use 'register' if you use passport-local-mongoose, 
-        // otherwise just new User().save()
+        // 1. CREATE 3 DUMMY USERS (if they don't exist)
         const owners = [];
         const usernames = ['owner1', 'owner2', 'owner3'];
 
-        console.log("Creating users...");
+        console.log("Checking for users...");
         for (const username of usernames) {
-            // Check if exists first
             let user = await User.findOne({ username });
             if (!user) {
-                // Create new user (Passport style)
                 const newUser = new User({ email: `${username}@gmail.com`, username });
-                user = await User.register(newUser, "password123"); // Default password
+                // Assuming passport-local-mongoose is used
+                user = await User.register(newUser, "password123"); 
+                console.log(`Created user: ${username}`);
             }
             owners.push(user._id);
         }
         console.log(`✅ Users ready: ${owners.length}`);
 
-        // 3. READ CSV & INSERT LISTINGS
+        // Check if DB is already populated
+        const existingCount = await Listing.countDocuments();
+        if (existingCount > 0) {
+            console.log(`⚠️ Database already has ${existingCount} listings.`);
+            console.log("   If you want to re-seed, uncomment the deleteMany lines in the code.");
+            mongoose.connection.close();
+            return;
+        }
+
+        // 2. READ CSV & INSERT LISTINGS
         const listings = [];
         let counter = 0;
+
+        console.log(`📖 Reading ${CSV_PATH}...`);
 
         fs.createReadStream(CSV_PATH)
             .pipe(csv())
             .on('data', (data) => {
-                // A. Assign Owner (Round Robin: 0, 1, 2, 0, 1, 2...)
+                // A. Assign Owner (Round Robin)
                 const ownerIndex = counter % 3;
                 const assignedOwner = owners[ownerIndex];
 
-                // B. Parse Coordinates (GeoJSON format is [Longitude, Latitude])
-                // CSV usually has lat, long columns.
+                // B. Parse Coordinates
                 const lat = parseFloat(data.latitude);
                 const long = parseFloat(data.longitude);
-
-                // Fallback if data is bad
                 const coordinates = (!isNaN(lat) && !isNaN(long))
                     ? [long, lat]
                     : [-73.935242, 40.730610]; // Default NYC
 
-                // 3. GET RANDOM IMAGES
+                // C. Visuals
                 const visuals = getVisuals();
-
-                // Add suffix for Unsplash sizing (optional optimization)
                 const imgParams = "?auto=format&fit=crop&w=800&q=80";
 
                 listings.push({
@@ -118,46 +136,48 @@ async function seedDB() {
                     location: data.neighbourhood_cleansed || "Unknown City",
                     country: "USA",
 
-                    // Main Image
                     image: {
                         url: visuals.main + imgParams,
                         filename: "unsplash_main"
                     },
-                    // Dummy Gallery (First image is same as main)
                     gallery: [
                         { url: visuals.gallery[0] + imgParams, filename: "gallery_1" },
                         { url: visuals.gallery[1] + imgParams, filename: "gallery_2" }
                     ],
 
-                    // Correct Geometry from CSV
                     geometry: {
                         type: 'Point',
                         coordinates: coordinates
                     },
 
-                    // Random Category
-                    category: getRandomCategory(),
+                    category: getRandomCategory(), // Fixed: returns String now
 
-                    // Amenities from CSV (using eval to parse string array)
-                    amenities: data.amenities ? eval(data.amenities) : [],
-
-                    // Max Guests from CSV ('accommodates')
+                    // D. Parse new fields
+                    amenities: safeParseList(data.amenities || "[]"),
                     maxGuests: parseInt(data.accommodates) || 2,
+                    
+                    // New Reviews Data
+                    averageRating: parseFloat(data.review_scores_rating) || 0,
+                    totalReviews: parseInt(data.number_of_reviews) || 0,
 
-                    // Assign the Owner
                     owner: assignedOwner,
-
-                    // AI Field
                     text_for_ai: data.text_for_ai
                 });
 
                 counter++;
             })
             .on('end', async () => {
-                console.log(`Parsed ${listings.length} listings. Inserting into MongoDB...`);
+                console.log(`Parsed ${listings.length} listings.`);
+                
                 if (listings.length > 0) {
-                    await Listing.insertMany(listings);
-                    console.log(`🎉 Inserted ${listings.length} listings with random images!`);
+                    // Insert in batches of 1000 to prevent timeouts
+                    const batchSize = 1000;
+                    for (let i = 0; i < listings.length; i += batchSize) {
+                        const batch = listings.slice(i, i + batchSize);
+                        await Listing.insertMany(batch);
+                        console.log(`   Inserted batch ${i} to ${i + batch.length}`);
+                    }
+                    console.log(`🎉 Successfully inserted ${listings.length} listings!`);
                 }
                 mongoose.connection.close();
             });
@@ -169,4 +189,3 @@ async function seedDB() {
 }
 
 seedDB();
-

@@ -1,6 +1,7 @@
 const socketIo = require("socket.io");
 const Message = require("./models/message");
 const Notification = require("./models/notification");
+const mongoose = require("mongoose");
 
 let io;
 
@@ -16,10 +17,10 @@ module.exports = {
         });
         io.on("connection", (socket) => {
             const userIdFromQuery = socket.handshake.query.userId;
-            
-            if (userIdFromQuery && userIdFromQuery !== 'undefined') {
+
+            if (mongoose.Types.ObjectId.isValid(userIdFromQuery)) {
                 socket.join(userIdFromQuery);
-                console.log(`✅ Client ${socket.id} connected and joined room: ${userIdFromQuery}`);
+                console.log(`✅ Client ${socket.id} connected and joined room ${userIdFromQuery}`);
             } else {
                 console.log(`⚠️ Client ${socket.id} connected without a valid userId`);
             }
@@ -29,42 +30,35 @@ module.exports = {
                 console.log(`User ${userId} joined room ${userId}`);
             });
 
-            socket.on("send_message", async (data) => {
-                console.log("📩 Socket received:", data);
+            socket.on("send_message", async ({ sender, recipient, content }) => {
+                console.log("📩 Socket received:", { sender, recipient, content });
 
-                const { sender, recipient, senderId, receiverId, content, senderName } = data;
-
-                const finalSender = sender || senderId;
-                const finalRecipient = recipient || receiverId;
-
-                if (!finalSender || !finalRecipient) {
-                    return console.error("❌ Cannot save message: Missing sender or recipient");
+                if (!mongoose.Types.ObjectId.isValid(sender) || !mongoose.Types.ObjectId.isValid(recipient) || !content) {
+                    return console.error("❌ Invalid message payload");
                 }
 
                 try {
-                    const newMessage = new Message({
-                        sender: finalSender,
-                        recipient: finalRecipient,
-                        content: content
+                    const savedMessage = await Message.create({
+                        sender,
+                        recipient,
+                        content
                     });
 
-                    const savedMessage = await newMessage.save();
                     console.log("✅ Message Saved to DB:", savedMessage._id);
 
-                    io.to(finalRecipient).emit("receive_message", savedMessage);
+                    io.to(recipient).emit("receive_message", savedMessage);
 
-                    const newNotification = new Notification({
-                        receiver: finalRecipient,
-                        sender: finalSender,
+                    const newNotification = await Notification.create({
+                        recipient,
+                        sender,
                         message: `New message: ${content.substring(0, 20)}...`,
-                        type: 'message',
+                        type: 'NEW_MESSAGE',
                         relatedId: savedMessage._id,
                         relatedModel: 'Message'
                     });
-                    await newNotification.save();
 
                     // 4. Emit Notification count/data to receiver
-                    io.to(finalRecipient).emit("receive_notification", newNotification);
+                    io.to(recipient).emit("receive_notification", newNotification);
 
                 } catch (error) {
                     console.error("❌ Socket Error:", error.message);

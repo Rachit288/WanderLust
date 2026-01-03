@@ -90,7 +90,7 @@ module.exports.showListing = async (req, res) => {
     // --- AI INTEGRATION: Get Recommendations ---
     let recommendations = [];
     try {
-        recommendations = await getRecommendations(id);
+        recommendations = await getRecommendations(id, req.user._id);
     } catch (err) {
         console.log("AI Service offline, skipping recommendations");
     }

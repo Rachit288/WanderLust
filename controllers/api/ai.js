@@ -1,28 +1,23 @@
 const axios = require('axios');
 
 // Configure your Python Service URL (usually port 8000)
-const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL || "http://localhost:8000";
-
+const PYTHON_SERVICE_URL = "http://localhost:8000";
+1
 module.exports.chat = async (req, res) => {
     try {
-        const { message, page_context = "general", listing_id = null } = req.body;
+        const { message, listing_id = null } = req.body;
 
-        // 1. Validation
+        const userId = req.user ? req.user._id.toString() : null;
+
         if (!message) {
             return res.status(400).json({ message: "Message is required" });
         }
-
-        // 2. Forward to Python AI Service
-        // We pass the data exactly how main.py (FastAPI) expects it: 
-        // { message, page_context, listing_id }
         const response = await axios.post(`${PYTHON_SERVICE_URL}/chat`, {
             message,
-            page_context,
-            listing_id
+            user_id: userId,
+            listing_id: listing_id
         });
 
-        // 3. Return AI Response to Frontend
-        // The Python service returns { "response": "..." }
         res.json(response.data);
 
     } catch (err) {

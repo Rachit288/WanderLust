@@ -115,7 +115,7 @@ module.exports.getAIRecommendations = async (req, res) => {
       return res.json({ recommendations: [] });
     }
 
-    const recommendations = await getPersonalizedRecommendations(historyIds);
+    const recommendations = await getPersonalizedRecommendations(historyIds, req.user._id);
 
     res.json({ recommendations });
   } catch (err) {
@@ -208,21 +208,21 @@ module.exports.toggleWatchlist = async (req, res) => {
 };
 
 module.exports.getUserById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        // Import User model if not already at top of file
-        const User = require('../../models/user'); 
-        
-        // Fetch safe public details only
-        const user = await User.findById(id).select('username email _id');
+  try {
+    const { id } = req.params;
+    // Import User model if not already at top of file
+    const User = require('../../models/user');
 
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
+    // Fetch safe public details only
+    const user = await User.findById(id).select('username email _id');
 
-        res.status(200).json(user);
-    } catch (err) {
-        console.error("Error fetching user:", err);
-        return res.status(500).json({ message: "Internal Server Error" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
+
+    res.status(200).json(user);
+  } catch (err) {
+    console.error("Error fetching user:", err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
 };

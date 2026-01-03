@@ -26,7 +26,7 @@ const notificationSchema = new Schema({
     },
     relatedModel: {
         type: String,
-        enum: ["Booking", "Listing"],
+        enum: ["Booking", "Listing", "Message"],
         default: "Booking"
     },
     isRead: {
